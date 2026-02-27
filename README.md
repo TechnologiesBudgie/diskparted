@@ -20,7 +20,7 @@ DiskParted exists to:
 
 ## Current Status
 
-DiskParted implements a subset of DiskPart commands. Currently **fully functional commands** include:
+DiskParted implements a subset of DiskPart commands. Currently **functional commands** include:
 
 * `create` – Create a partition or volume
 * `clean` – Remove all partition information from the disk
