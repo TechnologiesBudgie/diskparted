@@ -24,36 +24,72 @@ use std::io::{self, Write};
 /// Usage: shrink volume <size>
 /// Example: shrink volume 512M
 pub fn run(args: &[&str], ctx: &mut Context) {
-    if args.len() < 2 || args[0].to_lowercase() != "volume" {
-        println!("Usage:");
-        println!("  shrink volume <size>");
+    if args.is_empty() {
+        println!("Usage:\n  shrink [volume <size>] | querymax");
         return;
     }
 
-    let size_arg = args[1];
+    match args[0].to_lowercase().as_str() {
+        "volume" => {
+            if args.len() < 2 {
+                println!("Usage: shrink volume <size>");
+                return;
+            }
+            let size_arg = args[1];
+            let partition = match &ctx.selected_partition {
+                Some(p) => p,
+                None => {
+                    println!("No partition selected. Use `select partition <n>` first.");
+                    return;
+                }
+            };
 
-    let partition = match &ctx.selected_partition {
-        Some(p) => p,
-        None => {
-            println!("No partition selected. Use `select partition <n>` first.");
-            return;
+            println!(
+                "WARNING: You are about to shrink partition {} to {}.",
+                partition.path, size_arg
+            );
+
+            if !confirm("Do you want to continue? (y/N): ") {
+                println!("Aborted.");
+                return;
+            }
+
+            if let Err(e) = shrink_volume(size_arg, ctx) {
+                println!("Shrink failed: {}", e);
+            } else {
+                println!("Shrink operation completed successfully.");
+            }
         }
-    };
 
-    println!(
-        "WARNING: You are about to shrink partition {} to {}.",
-        partition.path, size_arg
-    );
+        "querymax" => {
+            let partition = match &ctx.selected_partition {
+                Some(p) => p,
+                None => {
+                    println!("No partition selected. Use `select partition <n>` first.");
+                    return;
+                }
+            };
 
-    if !confirm("Do you want to continue? (y/N): ") {
-        println!("Aborted.");
-        return;
-    }
+            let fs_type = match detect_filesystem(&partition.path) {
+                Some(f) => f,
+                None => {
+                    println!("Unable to detect filesystem type.");
+                    return;
+                }
+            };
 
-    if let Err(e) = shrink_volume(size_arg, ctx) {
-        println!("Shrink failed: {}", e);
-    } else {
-        println!("Shrink operation completed successfully.");
+            match get_max_shrink(&partition.path, &fs_type) {
+                Ok(bytes) => println!(
+                    "Maximum shrinkable space: {} MB",
+                    bytes / (1024 * 1024)
+                ),
+                Err(e) => println!("Failed to determine maximum shrink: {}", e),
+            }
+        }
+
+        _ => {
+            println!("Unknown argument. Usage:\n  shrink [volume <size>] | querymax");
+        }
     }
 }
 
@@ -65,15 +101,15 @@ fn shrink_volume(size_arg: &str, ctx: &mut Context) -> Result<(), String> {
         return Err(format!("Partition {} does not exist.", part_path));
     }
 
-    let fs_type = detect_filesystem(part_path);
+    let fs_type = detect_filesystem(part_path).ok_or("Unable to detect filesystem type.")?;
 
-    // Always unmount before shrinking
+    // Unmount first
     if !silent_unmount(part_path) {
         return Err(format!("Failed to unmount {}. Is it in use?", part_path));
     }
 
-    match fs_type.as_deref() {
-        Some("ext4") | Some("ext3") | Some("ext2") => {
+    match fs_type.as_str() {
+        "ext2" | "ext3" | "ext4" => {
             println!("Warning: Shrinking ext filesystem can cause data loss.");
             if !confirm("Proceed? (y/N): ") {
                 return Err("Aborted by user.".into());
@@ -83,8 +119,20 @@ fn shrink_volume(size_arg: &str, ctx: &mut Context) -> Result<(), String> {
                 .args(["-f", "-y", part_path])
                 .status();
 
+            let requested_bytes = parse_size_bytes(size_arg)?;
+            let max_bytes = get_max_shrink(part_path, &fs_type)?;
+            if requested_bytes > max_bytes {
+                return Err(format!(
+                    "Requested size too small; maximum safe shrink is {} MB",
+                    max_bytes / (1024 * 1024)
+                ));
+            }
+
+            // Convert bytes to blocks (assume 4 KB)
+            let blocks = requested_bytes / 4096;
+
             let status = Command::new("resize2fs")
-                .args([part_path, size_arg])
+                .args([part_path, &format!("{}", blocks)])
                 .status()
                 .map_err(|e| e.to_string())?;
 
@@ -95,25 +143,29 @@ fn shrink_volume(size_arg: &str, ctx: &mut Context) -> Result<(), String> {
             println!("Filesystem shrunk successfully.");
         }
 
-        Some("ntfs") => {
+        "ntfs" => {
             println!("Warning: Shrinking NTFS can cause data loss.");
             if !confirm("Proceed? (y/N): ") {
                 return Err("Aborted by user.".into());
             }
 
-            // Check filesystem first
-            let info_status = Command::new("ntfsresize")
+            let info_output = Command::new("ntfsresize")
                 .args(["--info", part_path])
-                .status()
+                .output()
                 .map_err(|e| e.to_string())?;
+            let info_str = String::from_utf8_lossy(&info_output.stdout);
+            let max_shrink_bytes = parse_ntfs_max_shrink(&info_str)?;
 
-            if !info_status.success() {
-                return Err("NTFS check failed.".into());
+            let requested_bytes = parse_size_bytes(size_arg)?;
+            if requested_bytes > max_shrink_bytes {
+                return Err(format!(
+                    "Requested size {} is too small; maximum safe shrink is {} bytes.",
+                    size_arg, max_shrink_bytes
+                ));
             }
 
-            // Shrink filesystem
             let resize_status = Command::new("ntfsresize")
-                .args(["--size", size_arg, part_path])
+                .args(["--size", &format!("{}B", requested_bytes), part_path])
                 .status()
                 .map_err(|e| e.to_string())?;
 
@@ -124,35 +176,77 @@ fn shrink_volume(size_arg: &str, ctx: &mut Context) -> Result<(), String> {
             println!("NTFS filesystem shrunk successfully.");
         }
 
-        Some(other) => {
-            return Err(format!(
-                "Filesystem type {} not supported for automatic shrinking.",
-                other
-            ));
-        }
-
-        None => {
-            return Err("Unable to detect filesystem type.".into());
-        }
+        other => return Err(format!("Filesystem type {} not supported.", other)),
     }
 
-    // Resize the partition table entry
-    resize_partition_table(part_path, size_arg)?;
-
-    // Refresh kernel partition table
+    resize_partition_table_with_buffer(part_path)?;
     refresh_partition_table(part_path);
 
     Ok(())
 }
 
-/// Resize partition entry using parted
-fn resize_partition_table(part_path: &str, new_size: &str) -> Result<(), String> {
-    let (disk, part_number) = split_partition_path(part_path)?;
+/// Get maximum shrinkable size in bytes for ext or NTFS
+fn get_max_shrink(part_path: &str, fs_type: &str) -> Result<u64, String> {
+    match fs_type {
+        "ext2" | "ext3" | "ext4" => {
+            let out = Command::new("resize2fs")
+                .arg("-P")
+                .arg(part_path)
+                .output()
+                .map_err(|e| e.to_string())?;
+            let stdout = String::from_utf8_lossy(&out.stdout);
+            for line in stdout.lines() {
+                if line.contains("Estimated minimum size of the filesystem") {
+                    if let Some(pos) = line.find("blocks") {
+                        let num_str = line[..pos].trim().split_whitespace().last().unwrap();
+                        if let Ok(num) = num_str.parse::<u64>() {
+                            return Ok(num * 4096); // 4 KB blocks -> bytes
+                        }
+                    }
+                }
+            }
+            Err("Failed to parse resize2fs output".into())
+        }
+        "ntfs" => {
+            let out = Command::new("ntfsresize")
+                .args(["--info", part_path])
+                .output()
+                .map_err(|e| e.to_string())?;
+            parse_ntfs_max_shrink(&String::from_utf8_lossy(&out.stdout))
+        }
+        _ => Err(format!("Filesystem {} not supported", fs_type)),
+    }
+}
 
+/// Resize partition entry using parted with small buffer (2 MB)
+fn resize_partition_table_with_buffer(part_path: &str) -> Result<(), String> {
+    let (disk, part_number) = split_partition_path(part_path)?;
     println!("Resizing partition table entry...");
 
+    let parted_output = Command::new("parted")
+        .args(["-m", &disk, "unit", "B", "print"])
+        .output()
+        .map_err(|e| e.to_string())?;
+    let parted_str = String::from_utf8_lossy(&parted_output.stdout);
+
+    let mut end_bytes = None;
+    for line in parted_str.lines() {
+        if line.starts_with(&part_number) {
+            let fields: Vec<&str> = line.split(':').collect();
+            if fields.len() >= 3 {
+                let s = fields[2].trim_end_matches("B");
+                if let Ok(n) = s.parse::<u64>() {
+                    end_bytes = Some(n);
+                }
+            }
+        }
+    }
+
+    let end_bytes = end_bytes.ok_or("Failed to read partition end from parted.")?;
+    let new_end = end_bytes.saturating_add(2 * 1024 * 1024); // 2 MB buffer
+
     let status = Command::new("parted")
-        .args(["-s", &disk, "resizepart", &part_number, new_size])
+        .args(["-s", &disk, "resizepart", &part_number, &format!("{}", new_end)])
         .status()
         .map_err(|e| e.to_string())?;
 
@@ -165,7 +259,6 @@ fn resize_partition_table(part_path: &str, new_size: &str) -> Result<(), String>
 }
 
 /// Extract disk path + partition number
-/// Works for /dev/sda1, /dev/nvme0n1p1, /dev/mmcblk0p1
 fn split_partition_path(part_path: &str) -> Result<(String, String), String> {
     let mut number = String::new();
     for c in part_path.chars().rev() {
@@ -200,7 +293,6 @@ fn refresh_partition_table(part_path: &str) {
     };
 
     println!("Refreshing partition table...");
-
     let result = Command::new("blockdev")
         .args(["--rereadpt", &disk])
         .status();
@@ -208,10 +300,7 @@ fn refresh_partition_table(part_path: &str) {
     if result.map(|s| s.success()).unwrap_or(false) {
         println!("Partition table reloaded.");
     } else {
-        // fallback to partprobe
-        let _ = Command::new("partprobe")
-            .arg(&disk)
-            .status();
+        let _ = Command::new("partprobe").arg(&disk).status();
         println!("Partition table refresh attempted.");
     }
 }
@@ -221,27 +310,18 @@ fn detect_filesystem(part_path: &str) -> Option<String> {
         .args(["-no", "FSTYPE", part_path])
         .output()
         .ok()?;
-
     let fs = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    if fs.is_empty() {
-        None
-    } else {
-        Some(fs)
-    }
+    if fs.is_empty() { None } else { Some(fs) }
 }
 
 fn silent_unmount(part_path: &str) -> bool {
-    let output = Command::new("umount")
-        .arg(part_path)
-        .output();
-
+    let output = Command::new("umount").arg(part_path).output();
     if let Ok(out) = output {
         let stderr = String::from_utf8_lossy(&out.stderr).to_lowercase();
         if out.status.success() || stderr.contains("not mounted") {
             return true;
         }
     }
-
     false
 }
 
@@ -255,4 +335,31 @@ fn confirm(prompt: &str) -> bool {
     } else {
         false
     }
+}
+
+fn parse_size_bytes(s: &str) -> Result<u64, String> {
+    let s = s.trim().to_uppercase();
+    if s.ends_with("G") {
+        s[..s.len() - 1].parse::<u64>().map(|v| v * 1024 * 1024 * 1024).map_err(|e| e.to_string())
+    } else if s.ends_with("M") {
+        s[..s.len() - 1].parse::<u64>().map(|v| v * 1024 * 1024).map_err(|e| e.to_string())
+    } else if s.ends_with("K") {
+        s[..s.len() - 1].parse::<u64>().map(|v| v * 1024).map_err(|e| e.to_string())
+    } else {
+        s.parse::<u64>().map_err(|e| e.to_string())
+    }
+}
+
+fn parse_ntfs_max_shrink(info: &str) -> Result<u64, String> {
+    for line in info.lines() {
+        if line.contains("You might resize at") || line.contains("minimum size") {
+            let parts: Vec<&str> = line.split_whitespace().collect();
+            for p in parts {
+                if let Ok(val) = p.parse::<u64>() {
+                    return Ok(val);
+                }
+            }
+        }
+    }
+    Err("Could not parse maximum shrinkable NTFS size.".into())
 }
