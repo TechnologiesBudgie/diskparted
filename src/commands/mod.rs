@@ -6,3 +6,4 @@ pub mod create;
 pub mod format;
 pub mod select_partition;
 pub mod delete;
+pub mod rescan;

@@ -1,6 +1,6 @@
 pub fn run() {
     println!("Copyright 2026 Raphaël Larocque, All Rights Reserved.\n");
-    println!("DiskParted version 0.1.0\n");
+    println!("DiskParted version 0.1.1\n");
     println!("Microsoft DiskPart-compatible command list:\n");
 
     println!("ACTIVE              - Mark the selected partition as active (not implemented yet)");
@@ -33,7 +33,7 @@ pub fn run() {
     println!("RECOVER             - Refresh disk state (not implemented yet)");
     println!("REM                 - Comment (not implemented yet)");
     println!("REMOVE              - Remove drive letter (not implemented yet)");
-    println!("RESCAN              - Rescan disks (not implemented yet)");
+    println!("RESCAN              - Rescan disks");
     println!("RETAIN              - Place retain partition (not implemented yet)");
     println!("SAN                 - Display or set SAN policy (not implemented yet)");
     println!("SELECT              - Select a disk or a partition");
@@ -50,6 +50,7 @@ pub fn run() {
     println!("  help");
     println!("  list disk");
     println!("  list volume");
+    println!("  rescan");
     println!("  select disk <n>");
     println!("  select partition <n>");
 }
