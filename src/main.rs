@@ -8,7 +8,7 @@ use rustyline::error::ReadlineError;
 use rustyline::DefaultEditor;
 
 fn main() {
-    println!("diskparted version 0.1.0");
+    println!("diskparted version 0.1.1");
     println!("Type 'exit' to quit.\n");
 
     let mut rl = DefaultEditor::new().unwrap();

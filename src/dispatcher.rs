@@ -1,4 +1,4 @@
-use crate::commands::{clean, list, select, select_partition, create, format, help, delete, rescan};
+use crate::commands::{clean, list, select, select_partition, create, format, help, delete, rescan, shrink};
 use crate::context::Context;
 
 /// Dispatch a user command to the correct module
@@ -22,6 +22,7 @@ pub fn dispatch(input: &str, ctx: &mut Context) {
         "create" => create::run(&parts[1..], ctx),
         "delete" => delete::run(&parts[1..], ctx),
         "rescan" => rescan::run(&parts[1..], ctx),
+        "shrink" => shrink::run(&parts[1..], ctx),
         "help" => help::run(),
         "format" => format::run(&parts[1..], ctx),
         _ => println!("Unknown command: {}", parts[0]),

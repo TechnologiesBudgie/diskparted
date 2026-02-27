@@ -38,7 +38,7 @@ pub fn run() {
     println!("SAN                 - Display or set SAN policy (not implemented yet)");
     println!("SELECT              - Select a disk or a partition");
     println!("SETID               - Change partition type (not implemented yet)");
-    println!("SHRINK              - Shrink a volume (not implemented yet)");
+    println!("SHRINK              - Shrink a volume (currently being implemented)");
     println!("UNIQUEID            - Display or set disk GUID (not implemented yet)");
 
     println!("\nCurrently implemented commands:");
@@ -53,4 +53,5 @@ pub fn run() {
     println!("  rescan");
     println!("  select disk <n>");
     println!("  select partition <n>");
+    println!("  shrink volume <MB>");
 }
