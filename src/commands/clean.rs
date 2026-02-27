@@ -1,4 +1,5 @@
 use std::process::Command;
+use std::io::{self, Write};
 use crate::context::Context;
 
 pub fn run(_args: &[&str], ctx: &mut Context) {
@@ -11,35 +12,45 @@ pub fn run(_args: &[&str], ctx: &mut Context) {
     };
 
     println!("WARNING: This will erase ALL partitions on {}!", disk.path);
-    println!("Type the disk path '{}' to confirm:", disk.path);
 
-    let mut input = String::new();
-    std::io::stdin().read_line(&mut input).unwrap();
-    if input.trim() != disk.path {
-        println!("Confirmation failed. Operation cancelled.");
+    // Ask for Y/N confirmation
+    if !confirm("Do you want to continue? (y/N): ") {
+        println!("Operation cancelled.");
         return;
     }
 
     println!("Cleaning disk {}...", disk.path);
 
     // wipe filesystem signatures (safely handles MBR & GPT)
-    if !Command::new("wipefs")
+    let wipe_status = Command::new("wipefs")
         .args(&["-a", &disk.path])
-        .status()
-        .unwrap()
-        .success()
-    {
+        .status();
+
+    if wipe_status.is_err() || !wipe_status.unwrap().success() {
         println!("Failed to wipe filesystem signatures.");
         return;
     }
 
-    // remove partition table (GPT/MBR) quietly
-    let status = Command::new("sgdisk")
+    // remove partition table quietly
+    let sgdisk_status = Command::new("sgdisk")
         .args(&["--zap-all", "--quiet", &disk.path])
         .status();
 
-    match status {
+    match sgdisk_status {
         Ok(s) if s.success() => println!("Disk {} cleaned successfully.", disk.path),
         _ => println!("Failed to fully clean partition table (you may need root)."),
+    }
+}
+
+/// Simple Y/N confirmation
+fn confirm(prompt: &str) -> bool {
+    print!("{}", prompt);
+    io::stdout().flush().unwrap();
+
+    let mut input = String::new();
+    if io::stdin().read_line(&mut input).is_ok() {
+        matches!(input.trim().to_lowercase().as_str(), "y" | "yes")
+    } else {
+        false
     }
 }

@@ -1,5 +1,6 @@
 use std::process::Command;
 use std::path::Path;
+use std::io::{self, Write};
 use crate::context::Context;
 use which::which;
 
@@ -50,10 +51,16 @@ pub fn run(args: &[&str], ctx: &mut Context) {
         return;
     }
 
-    println!("Formatting {} as {}{}...", partition.path, fs_type, if quick { " (quick)" } else { "" });
+    println!("WARNING: You are about to format {} as {}{}.", 
+        partition.path, fs_type, if quick { " (quick)" } else { "" });
+    
+    if !confirm("Do you want to continue? (y/N): ") {
+        println!("Aborted.");
+        return;
+    }
 
-    // Unmount before formatting
-    let _ = Command::new("umount").arg(&partition.path).status();
+    // Attempt to unmount silently
+    let _ = Command::new("umount").arg(&partition.path).output();
 
     let mkfs_cmd = match fs_type.as_str() {
         "fat" | "fat16" => "mkfs.fat",
@@ -79,7 +86,6 @@ pub fn run(args: &[&str], ctx: &mut Context) {
         _ => { println!("Unsupported FS '{}'", fs_type); return; }
     };
 
-    // Check mkfs binary exists
     if which::which(mkfs_cmd).is_err() {
         println!("Error: '{}' not found. Install the corresponding filesystem package.", mkfs_cmd);
         return;
@@ -103,5 +109,18 @@ pub fn run(args: &[&str], ctx: &mut Context) {
         Ok(s) if s.success() => println!("Partition {} formatted successfully.", partition.path),
         Ok(s) => println!("Failed to format {}. Exit code: {}", partition.path, s),
         Err(e) => println!("Failed to execute mkfs: {}", e),
+    }
+}
+
+/// Simple yes/no confirmation
+fn confirm(prompt: &str) -> bool {
+    print!("{}", prompt);
+    io::stdout().flush().unwrap();
+
+    let mut input = String::new();
+    if io::stdin().read_line(&mut input).is_ok() {
+        matches!(input.trim().to_lowercase().as_str(), "y" | "yes")
+    } else {
+        false
     }
 }
