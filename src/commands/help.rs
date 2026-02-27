@@ -34,16 +34,19 @@ pub fn run() {
     println!("RESCAN              - Rescan disks (not implemented yet)");
     println!("RETAIN              - Place retain partition (not implemented yet)");
     println!("SAN                 - Display or set SAN policy (not implemented yet)");
-    println!("SELECT              - Select a disk (partially implemented)");
+    println!("SELECT              - Select a disk or a partition");
     println!("SETID               - Change partition type (not implemented yet)");
     println!("SHRINK              - Shrink a volume (not implemented yet)");
     println!("UNIQUEID            - Display or set disk GUID (not implemented yet)");
 
     println!("\nCurrently implemented commands:");
+    println!("  create");
+    println!("  clean");
+    println!("  exit");
+    println!("  format")
+    println!("  help");;
     println!("  list disk");
     println!("  list volume");
     println!("  select disk <n>");
-    println!("  clean");
-    println!("  help");
-    println!("  exit");
+    println!("  select partition <n>");
 }
