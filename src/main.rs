@@ -1,34 +1,50 @@
-use std::io::{self, Write};
+mod context;
+mod dispatcher;
+mod utils;
+mod commands;
+
+use context::Context;
+use rustyline::error::ReadlineError;
+use rustyline::DefaultEditor;
 
 fn main() {
     println!("diskparted version 0.1.0");
     println!("Type 'exit' to quit.\n");
 
-    let mut input = String::new();
+    let mut rl = DefaultEditor::new().unwrap();
+    let mut ctx = Context::default();
 
     loop {
-        print!("diskparted> ");
-        io::stdout().flush().expect("Failed to flush stdout");
+        let readline = rl.readline("DISKPARTED> ");
 
-        input.clear();
+        match readline {
+            Ok(line) => {
+                let command = line.trim();
 
-        if io::stdin().read_line(&mut input).is_err() {
-            println!("Error reading input.");
-            continue;
-        }
+                if command.is_empty() {
+                    continue;
+                }
 
-        let command = input.trim();
+                rl.add_history_entry(command).unwrap();
 
-        match command {
-            "" => continue,
+                if command == "exit" || command == "quit" {
+                    println!("Exiting diskparted.");
+                    break;
+                }
 
-            "exit" | "quit" => {
-                println!("Exiting diskparted.");
+                dispatcher::dispatch(command, &mut ctx);
+            }
+            Err(ReadlineError::Interrupted) => {
+                println!("CTRL-C");
                 break;
             }
-
-            _ => {
-                println!("Unknown command: {}", command);
+            Err(ReadlineError::Eof) => {
+                println!("CTRL-D");
+                break;
+            }
+            Err(err) => {
+                println!("Error: {:?}", err);
+                break;
             }
         }
     }
