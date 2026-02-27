@@ -13,7 +13,7 @@ pub fn run() {
     println!("CLEAN               - Remove all partition information from the disk");
     println!("COMPACT             - Reduce the physical size of a VHD (not implemented yet)");
     println!("CONVERT             - Convert disk format (MBR/GPT) (not implemented yet)");
-    println!("CREATE              - Create a partition or volume (not implemented yet)");
+    println!("CREATE              - Create a partition or volume");
     println!("DELETE              - Delete a partition or volume (not implemented yet)");
     println!("DETAIL              - Display properties of selected disk/volume (not implemented yet)");
     println!("DETACH              - Detach a virtual disk (not implemented yet)");
