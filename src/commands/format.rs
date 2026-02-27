@@ -19,7 +19,6 @@ use std::process::Command;
 use std::path::Path;
 use std::io::{self, Write};
 use crate::context::Context;
-use which::which;
 
 /// Supported filesystems
 const SUPPORTED_FS: &[&str] = &[

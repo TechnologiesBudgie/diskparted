@@ -16,7 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 use crate::context::{Context, Partition};
-use crate::commands::list::get_disks;
 use std::process::Command;
 use serde::Deserialize;
 
