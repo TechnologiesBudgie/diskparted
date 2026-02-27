@@ -3,7 +3,7 @@
 **DiskParted** is a Linux-native, Rust-based tool inspired by Microsoft DiskPart. Its goal is to provide a familiar CLI for managing disks, partitions, and volumes on Linux systems. DiskParted aims to give power users, new GNU/Linux users, and sysadmins a safe and scriptable way to handle disk operations without relying on GUI tools.
 
 **Version:** 0.1.1
-**Authors:** DiskParted Team
+**Author:** DiskParted Team
 **License:** GNU GPLv3
 
 ---
@@ -31,9 +31,9 @@ DiskParted implements a subset of DiskPart commands. Currently **fully functiona
 * `list disk` – List all disks
 * `list volume` – List all volumes
 * `rescan` – Rescan disks
-* `select disk <n>` – Select a disk
-* `select partition <n>` – Select a partition
-* `shrink volume <MB>` – Shrink a volume
+* `select disk <number>` – Select a disk
+* `select partition <number>` – Select a partition
+* `shrink volume <size>` – Shrink a volume
 
 Other commands, like `active`, `assign`, `extend`, `merge`, and `gpt`, are planned but **not yet implemented**.
 
