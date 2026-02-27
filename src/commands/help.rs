@@ -1,4 +1,6 @@
 pub fn run() {
+    println!("Copyright 2026 Raphaël Larocque, All Rights Reserved.\n");
+    println!("DiskParted version 0.1.0\n");
     println!("Microsoft DiskPart-compatible command list:\n");
 
     println!("ACTIVE              - Mark the selected partition as active (not implemented yet)");
@@ -43,8 +45,8 @@ pub fn run() {
     println!("  create");
     println!("  clean");
     println!("  exit");
-    println!("  format")
-    println!("  help");;
+    println!("  format");
+    println!("  help");
     println!("  list disk");
     println!("  list volume");
     println!("  select disk <n>");
