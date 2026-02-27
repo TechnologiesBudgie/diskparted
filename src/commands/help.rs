@@ -19,7 +19,7 @@ pub fn run() {
     println!("EXPAND              - Expand a volume (not implemented yet)");
     println!("EXTEND              - Extend a volume (not implemented yet)");
     println!("FILESYSTEMS         - Display supported file systems (not implemented yet)");
-    println!("FORMAT              - Format a volume (not implemented yet)");
+    println!("FORMAT              - Format a volume (currently being implemented)");
     println!("GPT                 - Assign GPT attributes (not implemented yet)");
     println!("HELP                - Display this help information");
     println!("IMPORT              - Import a foreign disk group (not implemented yet)");
@@ -34,7 +34,7 @@ pub fn run() {
     println!("RESCAN              - Rescan disks (not implemented yet)");
     println!("RETAIN              - Place retain partition (not implemented yet)");
     println!("SAN                 - Display or set SAN policy (not implemented yet)");
-    println!("SELECT              - Select a disk");
+    println!("SELECT              - Select a disk (partially implemented)");
     println!("SETID               - Change partition type (not implemented yet)");
     println!("SHRINK              - Shrink a volume (not implemented yet)");
     println!("UNIQUEID            - Display or set disk GUID (not implemented yet)");
