@@ -1,6 +1,7 @@
-use crate::commands::{clean, list, select, create, format, help, select_partition};
+use crate::commands::{clean, list, select, select_partition, create, format, help, delete};
 use crate::context::Context;
 
+/// Dispatch a user command to the correct module
 pub fn dispatch(input: &str, ctx: &mut Context) {
     let parts: Vec<&str> = input.split_whitespace().collect();
 
@@ -17,8 +18,9 @@ pub fn dispatch(input: &str, ctx: &mut Context) {
             } else {
                 select::run(&parts[1..], ctx);
             }
-        },
+        }
         "create" => create::run(&parts[1..], ctx),
+        "delete" => delete::run(&parts[1..], ctx),
         "help" => help::run(),
         "format" => format::run(&parts[1..], ctx),
         _ => println!("Unknown command: {}", parts[0]),

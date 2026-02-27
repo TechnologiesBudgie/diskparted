@@ -27,11 +27,12 @@ fn main() {
 
                 rl.add_history_entry(command).unwrap();
 
-                if command == "exit" || command == "quit" {
+                if command.eq_ignore_ascii_case("exit") || command.eq_ignore_ascii_case("quit") {
                     println!("Exiting diskparted.");
                     break;
                 }
 
+                // ✅ Make sure dispatch is public in dispatcher.rs
                 dispatcher::dispatch(command, &mut ctx);
             }
             Err(ReadlineError::Interrupted) => {

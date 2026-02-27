@@ -14,7 +14,7 @@ pub fn run() {
     println!("COMPACT             - Reduce the physical size of a VHD (not implemented yet)");
     println!("CONVERT             - Convert disk format (MBR/GPT) (not implemented yet)");
     println!("CREATE              - Create a partition or volume");
-    println!("DELETE              - Delete a partition or volume (not implemented yet)");
+    println!("DELETE              - Delete a partition or volume");
     println!("DETAIL              - Display properties of selected disk/volume (not implemented yet)");
     println!("DETACH              - Detach a virtual disk (not implemented yet)");
     println!("EXIT                - Exit diskparted");
@@ -44,6 +44,7 @@ pub fn run() {
     println!("\nCurrently implemented commands:");
     println!("  create");
     println!("  clean");
+    println!("  delete partition");
     println!("  exit");
     println!("  format");
     println!("  help");
