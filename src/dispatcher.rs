@@ -1,4 +1,4 @@
-use crate::commands::{clean, help, list, select};
+use crate::commands::{clean, list, select, create, format};
 use crate::context::Context;
 
 pub fn dispatch(input: &str, ctx: &mut Context) {
@@ -9,11 +9,12 @@ pub fn dispatch(input: &str, ctx: &mut Context) {
     }
 
     match parts[0].to_lowercase().as_str() {
+        "clean" => clean::run(&parts[1..], ctx),
         "list" => list::run(&parts[1..], ctx),
         "select" => select::run(&parts[1..], ctx),
-        "clean" => clean::run(&parts[1..], ctx),
-        "help" => help::run(),
-        "?" => help::run(),
-        _ => println!("Unknown command. Type 'help' for available commands."),
+        "create" => create::run(&parts[1..], ctx),
+        "help" => crate::commands::help::run(),
+	"format" => format::run(&parts[1..], ctx),
+        _ => println!("Unknown command: {}", parts[0]),
     }
 }

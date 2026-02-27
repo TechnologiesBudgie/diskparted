@@ -1,9 +1,7 @@
 use std::process::Command;
 use crate::context::Context;
-use crate::utils::confirm;
 
 pub fn run(_args: &[&str], ctx: &mut Context) {
-    // Ensure a disk is selected
     let disk = match &ctx.selected_disk {
         Some(d) => d,
         None => {
@@ -12,7 +10,6 @@ pub fn run(_args: &[&str], ctx: &mut Context) {
         }
     };
 
-    // Ask user to type the disk path for confirmation
     println!("WARNING: This will erase ALL partitions on {}!", disk.path);
     println!("Type the disk path '{}' to confirm:", disk.path);
 
@@ -25,20 +22,20 @@ pub fn run(_args: &[&str], ctx: &mut Context) {
 
     println!("Cleaning disk {}...", disk.path);
 
-    // wipe filesystem signatures
-    let status = Command::new("wipefs")
+    // wipe filesystem signatures (safely handles MBR & GPT)
+    if !Command::new("wipefs")
         .args(&["-a", &disk.path])
         .status()
-        .expect("Failed to execute wipefs");
-
-    if !status.success() {
+        .unwrap()
+        .success()
+    {
         println!("Failed to wipe filesystem signatures.");
         return;
     }
 
-    // remove partition table (GPT/MBR)
+    // remove partition table (GPT/MBR) quietly
     let status = Command::new("sgdisk")
-        .args(&["--zap-all", &disk.path])
+        .args(&["--zap-all", "--quiet", &disk.path])
         .status();
 
     match status {
