@@ -1,6 +1,6 @@
 /*
  * DiskParted - A Disk Management Tool
- * Copyright (C) 2026 Raphaël Larocque
+ * Copyright (C) 2026 DiskParted Team
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 pub fn run() {
-    println!("Copyright 2026 Raphaël Larocque. Licensed under GNU GPLv3.\n");
+    println!("Copyright 2026 DiskParted Team. Licensed under GNU GPLv3.\n");
     println!("DiskParted version 0.1.1\n");
     println!("Microsoft DiskPart-compatible command list:\n");
 
