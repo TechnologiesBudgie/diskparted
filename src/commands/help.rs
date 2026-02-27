@@ -68,7 +68,7 @@ pub fn run() {
     println!("  list disk");
     println!("  list volume");
     println!("  rescan");
-    println!("  select disk <n>");
-    println!("  select partition <n>");
-    println!("  shrink volume <MB>");
+    println!("  select disk");
+    println!("  select partition");
+    println!("  shrink volume");
 }
