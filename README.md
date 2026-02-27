@@ -2,9 +2,9 @@
 
 **DiskParted** is a Linux-native, Rust-based tool inspired by Microsoft DiskPart. Its goal is to provide a familiar CLI for managing disks, partitions, and volumes on Linux systems. DiskParted aims to give power users, new GNU/Linux users, and sysadmins a safe and scriptable way to handle disk operations without relying on GUI tools.
 
-**Version:** 0.1.1
-**Author:** DiskParted Team
-**License:** GNU GPLv3
+**Version:** 0.1.1  
+**Author:** DiskParted Team  
+**License:** GNU GPLv3  
 
 ---
 
