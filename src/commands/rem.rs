@@ -15,13 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-pub mod clean;
-pub mod help;
-pub mod list;
-pub mod select;   // handles select disk / partition / volume
-pub mod create;
-pub mod format;
-pub mod delete;
-pub mod repair;
-pub mod rescan;
-pub mod filesystems;
+use crate::context::Context;
+
+/// REM — comment line. Silently ignores the rest of the line.
+///
+/// DiskPart syntax:  rem <any text>
+///
+/// Used in DiskPart scripts to add comments. This is a pure no-op.
+pub fn run(_args: &[&str], _ctx: &mut Context) {
+    // Comments produce no output and take no action — this is correct behaviour.
+}

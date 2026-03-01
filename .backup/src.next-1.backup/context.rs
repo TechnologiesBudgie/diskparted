@@ -15,13 +15,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-pub mod clean;
-pub mod help;
-pub mod list;
-pub mod select;   // handles select disk / partition / volume
-pub mod create;
-pub mod format;
-pub mod delete;
-pub mod repair;
-pub mod rescan;
-pub mod filesystems;
+#[derive(Debug, Clone)]
+pub struct Disk {
+    pub index: u32,
+    pub name: String,      // e.g. "sda"
+    pub path: String,      // e.g. "/dev/sda"
+    pub size: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct Partition {
+    pub index: u32,
+    pub name: String,      // e.g. "sda1"
+    pub path: String,      // e.g. "/dev/sda1"
+    pub size: String,
+}
+
+#[derive(Debug, Default)]
+pub struct Context {
+    pub selected_disk: Option<Disk>,
+    pub selected_partition: Option<Partition>,
+}

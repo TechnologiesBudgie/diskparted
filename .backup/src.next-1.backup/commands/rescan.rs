@@ -15,13 +15,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-pub mod clean;
-pub mod help;
-pub mod list;
-pub mod select;   // handles select disk / partition / volume
-pub mod create;
-pub mod format;
-pub mod delete;
-pub mod repair;
-pub mod rescan;
-pub mod filesystems;
+use std::process::Command;
+use crate::context::Context;
+
+/// Run the RESCAN command
+pub fn run(_args: &[&str], _ctx: &mut Context) {
+    println!("Rescanning disks...");
+
+    // FIX: diskparted already runs as root (sudo diskparted), so calling
+    // `sudo partprobe` from within it will fail in non-TTY or restricted
+    // sudoers environments. Call partprobe directly instead.
+    let status = Command::new("partprobe")
+        .status()
+        .expect("Failed to execute partprobe");
+
+    if status.success() {
+        println!("Disk rescan completed successfully.");
+    } else {
+        println!("Disk rescan failed.");
+    }
+}

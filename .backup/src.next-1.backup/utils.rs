@@ -15,13 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-pub mod clean;
-pub mod help;
-pub mod list;
-pub mod select;   // handles select disk / partition / volume
-pub mod create;
-pub mod format;
-pub mod delete;
-pub mod repair;
-pub mod rescan;
-pub mod filesystems;
+use std::io::{self, Write};
+
+pub fn confirm(prompt: &str) -> bool {
+    print!("{} [y/N]: ", prompt);
+    io::stdout().flush().unwrap();
+
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).unwrap();
+
+    matches!(input.trim().to_lowercase().as_str(), "y" | "yes")
+}
