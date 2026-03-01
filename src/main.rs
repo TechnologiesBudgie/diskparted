@@ -49,7 +49,7 @@ fn main() {
                     break;
                 }
 
-                // ✅ Make sure dispatch is public in dispatcher.rs
+                // maek sure dispatch is public in dispatcher.rs
                 dispatcher::dispatch(command, &mut ctx);
             }
             Err(ReadlineError::Interrupted) => {
