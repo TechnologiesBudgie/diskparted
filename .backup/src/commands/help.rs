@@ -55,7 +55,7 @@ pub fn run() {
     println!("SAN                 - Display or set SAN policy (not implemented yet)");
     println!("SELECT              - Select a disk or a partition");
     println!("SETID               - Change partition type (not implemented yet)");
-    println!("SHRINK              - Shrink a volume (not implemented yet)"); // FIX: was "noy"
+    println!("SHRINK              - Shrink a volume (noy implemented yet)");
     println!("UNIQUEID            - Display or set disk GUID (not implemented yet)");
 
     println!("\nCurrently implemented commands:");
@@ -66,9 +66,8 @@ pub fn run() {
     println!("  format");
     println!("  help");
     println!("  list disk");
-    println!("  list partition"); // FIX: was missing semicolon — wouldn't compile
+    println!("  list partition");
     println!("  list volume");
     println!("  rescan");
     println!("  select disk");
-    println!("  select partition");
 }
