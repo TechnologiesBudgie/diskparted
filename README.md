@@ -26,6 +26,7 @@ DiskParted implements a subset of DiskPart commands. Currently **functional comm
 * `clean` – Remove all partition information from the disk
 * `delete partition` – Delete a partition
 * `exit` – Exit the tool
+* `filesystems` – Displays information about the volume's filesystem and what filesystems are available for formatting it
 * `format` – Format a volume
 * `help` – Display help information
 * `list disk` – List all disks
