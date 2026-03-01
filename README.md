@@ -33,8 +33,7 @@ DiskParted implements a subset of DiskPart commands. Currently **functional comm
 * `rescan` – Rescan disks
 * `select disk <number>` – Select a disk
 * `select partition <number>` – Select a partition
-* `shrink volume <size>` – Shrink a volume
-
+    
 Other commands, like `active`, `assign`, `extend`, `merge`, and `gpt`, are planned but **not yet implemented**.
 
 ---
