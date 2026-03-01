@@ -16,8 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 use std::process::Command;
-use std::io::{self, Write};
 use crate::context::Context;
+use crate::utils; // FIX: use shared utils::confirm instead of local duplicate
 
 pub fn run(_args: &[&str], ctx: &mut Context) {
     let disk = match &ctx.selected_disk {
@@ -30,8 +30,7 @@ pub fn run(_args: &[&str], ctx: &mut Context) {
 
     println!("WARNING: This will erase ALL partitions on {}!", disk.path);
 
-    // Ask for Y/N confirmation
-    if !confirm("Do you want to continue? (y/N): ") {
+    if !utils::confirm("Do you want to continue?") {
         println!("Operation cancelled.");
         return;
     }
@@ -56,18 +55,5 @@ pub fn run(_args: &[&str], ctx: &mut Context) {
     match sgdisk_status {
         Ok(s) if s.success() => println!("Disk {} cleaned successfully.", disk.path),
         _ => println!("Failed to fully clean partition table (you may need root)."),
-    }
-}
-
-/// Simple Y/N confirmation
-fn confirm(prompt: &str) -> bool {
-    print!("{}", prompt);
-    io::stdout().flush().unwrap();
-
-    let mut input = String::new();
-    if io::stdin().read_line(&mut input).is_ok() {
-        matches!(input.trim().to_lowercase().as_str(), "y" | "yes")
-    } else {
-        false
     }
 }

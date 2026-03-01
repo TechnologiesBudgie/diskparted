@@ -22,8 +22,10 @@ use crate::context::Context;
 pub fn run(_args: &[&str], _ctx: &mut Context) {
     println!("Rescanning disks...");
 
-    let status = Command::new("sudo")
-        .arg("partprobe")  // update kernel partition table
+    // FIX: diskparted already runs as root (sudo diskparted), so calling
+    // `sudo partprobe` from within it will fail in non-TTY or restricted
+    // sudoers environments. Call partprobe directly instead.
+    let status = Command::new("partprobe")
         .status()
         .expect("Failed to execute partprobe");
 

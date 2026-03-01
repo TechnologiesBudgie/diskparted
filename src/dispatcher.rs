@@ -1,7 +1,6 @@
 /*
  * DiskParted - A Disk Management Tool
  * Copyright (C) 2026 DiskParted Team
- * Copyright (C) 2026 DiskParted Team
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

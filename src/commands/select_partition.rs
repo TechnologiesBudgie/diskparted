@@ -48,7 +48,7 @@ pub fn run(args: &[&str], ctx: &mut Context) {
         return;
     }
 
-    let part_index = match args[1].parse::<u32>() {
+    let part_index: u32 = match args[1].parse() {
         Ok(n) => n,
         Err(_) => {
             println!("Invalid partition number.");
@@ -56,7 +56,6 @@ pub fn run(args: &[&str], ctx: &mut Context) {
         }
     };
 
-    // List partitions of the selected disk
     let output = Command::new("lsblk")
         .args(["-J", "-o", "NAME,SIZE,TYPE"])
         .arg(&disk.path)
@@ -68,7 +67,27 @@ pub fn run(args: &[&str], ctx: &mut Context) {
 
     if let Some(device) = parsed.blockdevices.into_iter().next() {
         if let Some(children) = device.children {
-            if let Some(part) = children.into_iter().find(|p| p.devtype == "part" && p.name.ends_with(&part_index.to_string())) {
+            // FIX: ends_with(&part_index.to_string()) is ambiguous — "sda1" would
+            // match when asking for partition 1 even if "sda11" also exists.
+            // Instead, collect all partitions in order and select by 1-based index,
+            // which matches the numbers shown by `list partition`.
+            let parts: Vec<Device> = children.into_iter()
+                .filter(|p| p.devtype == "part")
+                .collect();
+
+            // part_index is 1-based to match what `list partition` displays
+            let target = parts.into_iter().find(|p| {
+                let suffix: String = p.name.chars()
+                    .rev()
+                    .take_while(|c| c.is_ascii_digit())
+                    .collect::<String>()
+                    .chars()
+                    .rev()
+                    .collect();
+                suffix.parse::<u32>().ok() == Some(part_index)
+            });
+
+            if let Some(part) = target {
                 let partition = Partition {
                     index: part_index,
                     name: part.name.clone(),
@@ -82,5 +101,5 @@ pub fn run(args: &[&str], ctx: &mut Context) {
         }
     }
 
-    println!("Partition not found.");
+    println!("Partition {} not found.", part_index);
 }
