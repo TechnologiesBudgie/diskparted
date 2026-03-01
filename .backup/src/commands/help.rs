@@ -70,4 +70,5 @@ pub fn run() {
     println!("  list volume");
     println!("  rescan");
     println!("  select disk");
+    println!("Please refer to https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/diskpart for more information.");
 }

@@ -55,7 +55,7 @@ pub fn run() {
     println!("SAN                 - Display or set SAN policy (not implemented yet)");
     println!("SELECT              - Select a disk or a partition");
     println!("SETID               - Change partition type (not implemented yet)");
-    println!("SHRINK              - Shrink a volume (noy implemented yet)");
+    println!("SHRINK              - Shrink a volume (not implemented yet)");
     println!("UNIQUEID            - Display or set disk GUID (not implemented yet)");
 
     println!("\nCurrently implemented commands:");
@@ -69,6 +69,8 @@ pub fn run() {
     println!("  list partition");
     println!("  list volume");
     println!("  rescan");
-    println!("  select disk");
+    println!("  select disk
+  select partition
+  select volume");
     println!("Please refer to https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/diskpart for more information.");
 }

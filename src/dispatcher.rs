@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-use crate::commands::{clean, list, select, select_partition, create, format, help, delete, rescan};
+use crate::commands::{clean, list, select, create, format, help, delete, rescan};
 use crate::context::Context;
 
 /// Dispatch a user command to the correct module
@@ -27,19 +27,13 @@ pub fn dispatch(input: &str, ctx: &mut Context) {
     }
 
     match parts[0].to_lowercase().as_str() {
-        "clean" => clean::run(&parts[1..], ctx),
-        "list" => list::run(&parts[1..], ctx),
-        "select" => {
-            if parts.len() > 1 && parts[1].to_lowercase() == "partition" {
-                select_partition::run(&parts[1..], ctx);
-            } else {
-                select::run(&parts[1..], ctx);
-            }
-        }
+        "clean"  => clean::run(&parts[1..], ctx),
+        "list"   => list::run(&parts[1..], ctx),
+        "select" => select::run(&parts[1..], ctx), // handles disk / partition / volume
         "create" => create::run(&parts[1..], ctx),
         "delete" => delete::run(&parts[1..], ctx),
         "rescan" => rescan::run(&parts[1..], ctx),
-        "help" => help::run(),
+        "help"   => help::run(),
         "format" => format::run(&parts[1..], ctx),
         _ => println!("Unknown command: {}", parts[0]),
     }
