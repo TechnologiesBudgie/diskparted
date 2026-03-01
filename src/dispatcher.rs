@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-use crate::commands::{clean, list, select, select_partition, create, format, help, delete, rescan, shrink};
+use crate::commands::{clean, list, select, select_partition, create, format, help, delete, rescan};
 use crate::context::Context;
 
 /// Dispatch a user command to the correct module
