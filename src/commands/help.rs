@@ -66,7 +66,7 @@ pub fn run() {
     println!("  format");
     println!("  help");
     println!("  list disk");
-    println!("  list partition")
+    println!("  list partition");
     println!("  list volume");
     println!("  rescan");
     println!("  select disk");
