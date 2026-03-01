@@ -22,18 +22,20 @@ DiskParted exists to:
 
 DiskParted implements a subset of DiskPart commands. Currently **functional commands** include:
 
-* `create` – Create a partition or volume
-* `clean` – Remove all partition information from the disk
-* `delete partition` – Delete a partition
-* `exit` – Exit the tool
-* `filesystems` – Displays information about the volume's filesystem and what filesystems are available for formatting it
-* `format` – Format a volume
-* `help` – Display help information
-* `list disk` – List all disks
-* `list volume` – List all volumes
-* `rescan` – Rescan disks
-* `select disk <number>` – Select a disk
-* `select partition <number>` – Select a partition
+* `create` - Create a partition or volume
+* `clean` - Remove all partition information from the disk
+* `delete partition` - Delete a partition
+* `exit` - Exit the tool
+* `filesystems` - Displays information about the volume's filesystem and what filesystems are available for formatting
+* `format` - Format a volume
+* `help` - Display help information
+* `list disk` - List all disks
+* `list partition` - List all partitions
+* `list volume` - List all volumes
+* `rescan` - Rescan disks
+* `select disk <number>` - Select a disk
+* `select partition <number>` - Select a partition
+* `select volume <number>` - Select a volume
     
 Other commands, like `active`, `assign`, `extend`, `merge`, and `gpt`, are planned but **not yet implemented**.
 
