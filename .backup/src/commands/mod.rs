@@ -18,9 +18,9 @@
 pub mod clean;
 pub mod help;
 pub mod list;
-pub mod select;
+pub mod select;   // handles select disk / partition / volume
 pub mod create;
 pub mod format;
-pub mod select_partition;
 pub mod delete;
 pub mod rescan;
+pub mod filesystems;

@@ -23,3 +23,4 @@ pub mod create;
 pub mod format;
 pub mod delete;
 pub mod rescan;
+pub mod filesystems;

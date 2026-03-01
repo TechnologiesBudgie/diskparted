@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-use crate::commands::{clean, list, select, create, format, help, delete, rescan};
+use crate::commands::{clean, list, select, create, format, filesystems, help, delete, rescan};
 use crate::context::Context;
 
 /// Dispatch a user command to the correct module
@@ -34,7 +34,8 @@ pub fn dispatch(input: &str, ctx: &mut Context) {
         "delete" => delete::run(&parts[1..], ctx),
         "rescan" => rescan::run(&parts[1..], ctx),
         "help"   => help::run(),
-        "format" => format::run(&parts[1..], ctx),
+        "format"      => format::run(&parts[1..], ctx),
+        "filesystems" => filesystems::run(&parts[1..], ctx),
         _ => println!("Unknown command: {}", parts[0]),
     }
 }

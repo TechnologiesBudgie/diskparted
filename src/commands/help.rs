@@ -37,7 +37,7 @@ pub fn run() {
     println!("EXIT                - Exit diskparted");
     println!("EXPAND              - Expand a volume (not implemented yet)");
     println!("EXTEND              - Extend a volume (not implemented yet)");
-    println!("FILESYSTEMS         - Display supported file systems (not implemented yet)");
+    println!("FILESYSTEMS         - Display current and supported file systems for selected volume");
     println!("FORMAT              - Format a volume (currently being implemented)");
     println!("GPT                 - Assign GPT attributes (not implemented yet)");
     println!("HELP                - Display this help information");
@@ -63,7 +63,8 @@ pub fn run() {
     println!("  clean");
     println!("  delete partition");
     println!("  exit");
-    println!("  format");
+    println!("  filesystems");
+  println!("  format");
     println!("  help");
     println!("  list disk");
     println!("  list partition");
