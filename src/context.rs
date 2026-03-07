@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct Disk {
     pub index: u32,
     pub name: String,      // e.g. "sda"
