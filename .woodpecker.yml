@@ -1,0 +1,53 @@
+# ─────────────────────────────────────────────────────────────
+#  DiskParted — Woodpecker CI
+#  Runs on every push; publishes a release binary on git tags.
+# ─────────────────────────────────────────────────────────────
+
+when:
+  - event: push
+  - event: tag
+
+steps:
+  # ── 1. Build ────────────────────────────────────────────────
+  build:
+    image: rust:latest
+    commands:
+      - cargo build --release
+      - strip target/release/diskparted
+      - cp target/release/diskparted diskparted-linux-x86_64
+    when:
+      - event: push
+      - event: tag
+
+  # ── 2. Publish release (tags only) ─────────────────────────
+  release:
+    image: woodpeckerci/plugin-gitea-release
+    settings:
+      api_key:
+        from_secret: CODEBERG_TOKEN
+      base_url: https://codeberg.org
+      files:
+        - diskparted-linux-x86_64
+      title: "DiskParted ${CI_COMMIT_TAG}"
+      note: |
+        ## DiskParted ${CI_COMMIT_TAG}
+
+        Linux x86_64 binary — built with `cargo build --release`, stripped.
+
+        ### Install
+        ```bash
+        sudo cp diskparted-linux-x86_64 /usr/local/sbin/diskparted
+        sudo chmod +x /usr/local/sbin/diskparted
+        ```
+
+        ### Or build from source
+        ```bash
+        git clone https://codeberg.org/TechnologiesBudgie/diskparted.git
+        cd diskparted
+        cargo build --release
+        sudo cp target/release/diskparted /usr/local/sbin/
+        ```
+      draft: false
+      prerelease: false
+    when:
+      event: tag
