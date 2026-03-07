@@ -87,19 +87,27 @@ vdisk list                                     List all attached NBD devices
 
 Supported formats: `qcow2`, `raw`, `vdi`, `vmdk`, `vhd`, `hdd`
 
-Requires: `qemu-img` — `pacman -S qemu-img`
+Requires: `qemu-img`
 
 ---
 
 ## Installation
 
-Build from source using Rust:
+Build from source:  
 
 ```bash
 git clone https://codeberg.org/Infomanraf/diskparted.git
 cd diskparted
-cargo build --release
-sudo cp target/release/diskparted /usr/local/sbin/
+chmod +x build.sh
+./build.sh
+```
+Install the binaries:  
+
+```bash
+git clone https://codeberg.org/Infomanraf/diskparted.git
+cd diskparted
+chmod +x install.sh
+sudo ./install.sh
 ```
 
 Run:
@@ -112,16 +120,17 @@ sudo diskparted
 
 ## Dependencies
 
-| Tool        | Used by | Install |
-|-------------|---------|---------|
-| `parted`    | create, delete, convert | `pacman -S parted` |
-| `sgdisk`    | gpt, setid, uniqueid, clean | `pacman -S gptfdisk` |
-| `wipefs`    | clean | `pacman -S util-linux` |
-| `partprobe` | rescan, recover | `pacman -S parted` |
-| `lsblk`     | list, select, detail | `pacman -S util-linux` |
-| `mdadm`     | add, break, recover, repair | `pacman -S mdadm` |
-| `qemu-img`  | vdisk | `pacman -S qemu-img` |
-| `qemu-nbd`  | vdisk attach/detach | `pacman -S qemu-img` |
+| Tool        | Used by |
+|-------------|---------|
+| `parted`    | create, delete, convert |
+| `sgdisk`    | gpt, setid, uniqueid, clean |
+| `sudo`      | diskparted, build.sh, install.sh |
+| `wipefs`    | clean |
+| `partprobe` | rescan, recover |
+| `lsblk`     | list, select, detail |
+| `mdadm`     | add, break, recover, repair |
+| `qemu-img`  | vdisk |
+| `qemu-nbd`  | vdisk attach/detach |
 
 ---
 
@@ -129,7 +138,7 @@ sudo diskparted
 
 DiskParted is under active development. Contributions are welcome, especially for:
 
-- Implementing `EXTEND` and `SHRINK` (the last two unimplemented core commands)
+- Implementing more commands
 - Improving safety checks and error handling
 - Adding support for new filesystems
-- Testing on non-Arch distributions
+- Testing in various environments
