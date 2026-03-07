@@ -51,3 +51,6 @@ pub mod uniqueid;     // UNIQUEID — display/set disk GUID or MBR signature
 
 // ── Unimplementable commands ───────────────────────────────────────────────
 pub mod impossible;   // ATTACH/DETACH/COMPACT/EXPAND/MERGE/ATTRIBUTES stubs
+
+// ── Virtual disk manager ───────────────────────────────────────────────────
+pub mod vdisk;        // VDISK — create/attach/detach/compact/expand/info/list

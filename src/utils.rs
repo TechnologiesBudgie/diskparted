@@ -15,14 +15,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
+//! Shared utility functions used across command modules.
+
 use std::io::{self, Write};
 
+/// Prompt the user with a yes/no question and return `true` if they answer `y` or `yes`.
+///
+/// Prints `<prompt> [y/N]: ` and reads a line from stdin.
+/// Defaults to **no** on empty input or any non-yes answer.
+///
+/// # Example
+/// ```
+/// if !utils::confirm("This will erase all data. Continue?") {
+///     println!("Aborted.");
+///     return;
+/// }
+/// ```
 pub fn confirm(prompt: &str) -> bool {
     print!("{} [y/N]: ", prompt);
-    io::stdout().flush().unwrap();
+    io::stdout().flush().unwrap_or(());
 
     let mut input = String::new();
-    io::stdin().read_line(&mut input).unwrap();
+    if io::stdin().read_line(&mut input).is_err() {
+        return false;
+    }
 
     matches!(input.trim().to_lowercase().as_str(), "y" | "yes")
 }

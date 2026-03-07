@@ -51,29 +51,24 @@ use crate::context::Context;
 ///     qemu-img convert -f vpc -O raw input.vhd output.img
 ///     sudo losetup -fP output.img
 pub fn attach(_args: &[&str], _ctx: &mut Context) {
-    println!("ATTACH is not supported on Linux.");
+    println!("ATTACH manages Windows VHD/VHDX files via Windows VDS.");
+    println!("On Linux, use the 'vdisk' command instead:");
     println!();
-    println!("ATTACH mounts a Windows VHD/VHDX virtual disk file. This requires the");
-    println!("Windows Virtual Disk Service (VDS), which does not exist on Linux.");
+    println!("  vdisk attach <file.qcow2|.raw|.vdi|.vmdk|.vhd|.hdd>");
+    println!("  vdisk list");
     println!();
-    println!("Linux alternatives:");
-    println!("  Raw images    : sudo losetup -fP <image.img>");
-    println!("  VHD images    : qemu-img convert -f vpc -O raw input.vhd output.img");
-    println!("                  sudo losetup -fP output.img");
-    println!("  QCOW2/VMDK    : sudo qemu-nbd --connect=/dev/nbd0 <image>");
+    println!("Supported formats: qcow2, raw, vdi, vmdk, vhd, hdd");
+    println!("Requires: qemu-img  (pacman -S qemu-img)");
 }
 
 /// DETACH — detach a virtual hard disk (VHD/VHDX).
 /// See ATTACH for explanation.
 pub fn detach(_args: &[&str], _ctx: &mut Context) {
-    println!("DETACH is not supported on Linux.");
+    println!("DETACH manages Windows VHD/VHDX files via Windows VDS.");
+    println!("On Linux, use the 'vdisk' command instead:");
     println!();
-    println!("DETACH unmounts a Windows VHD/VHDX virtual disk. This requires the");
-    println!("Windows Virtual Disk Service (VDS), which does not exist on Linux.");
-    println!();
-    println!("Linux alternatives:");
-    println!("  Loop devices  : sudo losetup -d /dev/loopN");
-    println!("  NBD devices   : sudo qemu-nbd --disconnect /dev/nbd0");
+    println!("  vdisk detach <file | /dev/nbdN | all>");
+    println!("  vdisk list");
 }
 
 // ---------------------------------------------------------------------------
@@ -89,13 +84,12 @@ pub fn detach(_args: &[&str], _ctx: &mut Context) {
 /// Linux alternative:
 ///   qemu-img convert -O qcow2 input.qcow2 compacted.qcow2
 pub fn compact(_args: &[&str], _ctx: &mut Context) {
-    println!("COMPACT is not supported on Linux.");
+    println!("COMPACT manages Windows VHD files via Windows VDS.");
+    println!("On Linux, use the 'vdisk' command instead:");
     println!();
-    println!("COMPACT reclaims unused space in a Windows dynamically expanding VHD.");
-    println!("This requires the Windows Virtual Disk Service (VDS).");
+    println!("  vdisk compact <file.qcow2|.vdi|...>");
     println!();
-    println!("Linux alternative (QCOW2 compaction):");
-    println!("  qemu-img convert -O qcow2 input.qcow2 compacted.qcow2");
+    println!("Reclaims unused space by re-packing the image with qemu-img.");
 }
 
 // ---------------------------------------------------------------------------
@@ -110,14 +104,10 @@ pub fn compact(_args: &[&str], _ctx: &mut Context) {
 /// Linux alternative:
 ///   qemu-img resize <image> +<size>
 pub fn expand(_args: &[&str], _ctx: &mut Context) {
-    println!("EXPAND is not supported on Linux.");
+    println!("EXPAND manages Windows VHD files via Windows VDS.");
+    println!("On Linux, use the 'vdisk' command instead:");
     println!();
-    println!("EXPAND increases the maximum size of a Windows VHD virtual disk.");
-    println!("This requires the Windows Virtual Disk Service (VDS).");
-    println!();
-    println!("Linux alternative:");
-    println!("  qemu-img resize <image.qcow2> +10G");
-    println!("  (then resize the partition and filesystem inside)");
+    println!("  vdisk expand <file> size=<MB>");
 }
 
 // ---------------------------------------------------------------------------
@@ -133,13 +123,12 @@ pub fn expand(_args: &[&str], _ctx: &mut Context) {
 /// Linux alternative (QCOW2 backing files):
 ///   qemu-img commit child.qcow2   (merges child changes into parent)
 pub fn merge(_args: &[&str], _ctx: &mut Context) {
-    println!("MERGE is not supported on Linux.");
+    println!("MERGE merges a Hyper-V differencing VHD with its parent.");
+    println!("This is a Windows Hyper-V-only concept with no direct Linux equivalent.");
     println!();
-    println!("MERGE collapses a Windows VHD differencing disk chain into its parent.");
-    println!("This is a Hyper-V/VDS concept with no Linux equivalent.");
-    println!();
-    println!("Linux alternative (QCOW2 backing files):");
-    println!("  qemu-img commit child.qcow2   — merges child changes into its backing file");
+    println!("For qcow2 backing files on Linux:");
+    println!("  qemu-img commit <child.qcow2>      — commit child changes into parent");
+    println!("  qemu-img rebase -b '' <child.qcow2> — flatten into standalone image");
 }
 
 // ---------------------------------------------------------------------------

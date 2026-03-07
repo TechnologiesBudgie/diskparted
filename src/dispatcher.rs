@@ -21,6 +21,8 @@ use crate::commands::{
     // new
     active, add, assign, automount, break_cmd, convert, detail, gpt, import_cmd,
     inactive, offline, online, recover, rem, remove, retain, san, setid, uniqueid,
+    // virtual disk manager
+    vdisk,
     // unimplementable stubs
     impossible,
 };
@@ -67,6 +69,7 @@ pub fn dispatch(input: &str, ctx: &mut Context) {
         "san"         => san::run(&parts[1..], ctx),
         "set"         => dispatch_set(&parts[1..], ctx),   // 'set id=...'
         "uniqueid"    => uniqueid::run(&parts[1..], ctx),
+        "vdisk"       => vdisk::run(&parts[1..], ctx),
 
         // ── Unimplementable stubs ──────────────────────────────────────────
         "attach"      => impossible::attach(&parts[1..], ctx),

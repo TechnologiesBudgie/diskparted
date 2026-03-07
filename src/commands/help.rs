@@ -17,7 +17,7 @@
  */
 pub fn run() {
     println!("Copyright 2026 DiskParted Team. Licensed under GNU GPLv3.");
-    println!("DiskParted version 0.1.2");
+    println!("DiskParted version 1.0.1");
     println!();
     println!("Microsoft DiskPart-compatible commands:");
     println!();
@@ -66,6 +66,7 @@ pub fn run() {
         ("SET ID",        "[+]", "Change partition type field (GPT GUID or MBR byte)"),
         ("SHRINK",        "[ ]", "Shrink a volume (not yet implemented)"),
         ("UNIQUEID",      "[+]", "Display or set disk GUID (GPT) or MBR signature"),
+        ("VDISK",         "[+]", "Manage virtual disks (qcow2/raw/vdi/vmdk/vhd/hdd)"),
     ];
 
     for (cmd, status, desc) in commands {
