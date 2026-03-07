@@ -51,7 +51,7 @@ fn main() {
         std::process::exit(status.code().unwrap_or(1));
     }
 
-    println!("diskparted version 0.1.1");
+    println!("diskparted version 1.0.1");
     println!("Type 'exit' to quit.\n");
 
     let mut rl = DefaultEditor::new().unwrap();
