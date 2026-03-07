@@ -24,7 +24,33 @@ use context::Context;
 use rustyline::error::ReadlineError;
 use rustyline::DefaultEditor;
 
+/// Returns true if the current effective user ID is 0 (root).
+fn is_root() -> bool {
+    std::process::Command::new("id")
+        .arg("-u")
+        .output()
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim() == "0")
+        .unwrap_or(false)
+}
+
 fn main() {
+    // DiskParted requires root privileges for all disk operations.
+    // If not running as root, re-exec the current binary under sudo.
+    if !is_root() {
+        eprintln!("DiskParted requires root privileges. Re-launching with sudo...");
+
+        let exe = std::env::current_exe()
+            .expect("Failed to determine current executable path");
+
+        let status = std::process::Command::new("sudo")
+            .arg(exe)
+            .args(std::env::args().skip(1))
+            .status()
+            .expect("Failed to execute sudo. Is sudo installed?");
+
+        std::process::exit(status.code().unwrap_or(1));
+    }
+
     println!("diskparted version 0.1.1");
     println!("Type 'exit' to quit.\n");
 
