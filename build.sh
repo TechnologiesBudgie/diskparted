@@ -37,7 +37,11 @@ detect_distro() {
 }
 
 ###############################################################################
-# Install a C linker + curl (needed by rustup) for each family
+# Build deps:    curl gcc (for rustup + linking)
+# Runtime deps:  parted partprobe(parted) e2fsprogs(resize2fs/e2fsck/dumpe2fs)
+#                xfsprogs btrfs-progs ntfs-3g(ntfsresize) cryptsetup
+#                smartmontools(smartctl) lvm2 qemu-utils(qemu-img/qemu-nbd)
+#                sgdisk(gdisk) util-linux(lsblk/blkdiscard/wipefs) shred(coreutils)
 ###############################################################################
 install_system_deps() {
     # Helper: run with sudo if not already root
@@ -60,66 +64,175 @@ install_system_deps() {
     debian|ubuntu|linuxmint|pop|elementary|kali|parrot|zorin|raspbian|tails|mx|deepin|neon)
         info "Using apt-get (Debian/Ubuntu family)"
         _sudo apt-get update -qq
-        _sudo apt-get install -y --no-install-recommends curl gcc build-essential
+        _sudo apt-get install -y --no-install-recommends \
+            curl gcc build-essential \
+            parted \
+            e2fsprogs \
+            xfsprogs \
+            btrfs-progs \
+            ntfs-3g \
+            cryptsetup \
+            smartmontools \
+            lvm2 \
+            qemu-utils \
+            gdisk \
+            util-linux \
+            coreutils
         ;;
 
     # ── Fedora / RHEL / CentOS family ─────────────────────────────────────────
     fedora|rhel|centos|rocky|almalinux|ol|scientific|nobara|eurolinux)
         if command -v dnf &>/dev/null; then
             info "Using dnf (Fedora/RHEL family)"
-            _sudo dnf install -y curl gcc
+            _sudo dnf install -y \
+                curl gcc \
+                parted \
+                e2fsprogs \
+                xfsprogs \
+                btrfs-progs \
+                ntfsprogs \
+                cryptsetup \
+                smartmontools \
+                lvm2 \
+                qemu-img \
+                gdisk \
+                util-linux \
+                coreutils
         else
             info "Using yum (legacy RHEL/CentOS)"
-            _sudo yum install -y curl gcc
+            _sudo yum install -y \
+                curl gcc \
+                parted \
+                e2fsprogs \
+                xfsprogs \
+                btrfs-progs \
+                ntfsprogs \
+                cryptsetup \
+                smartmontools \
+                lvm2 \
+                qemu-img \
+                gdisk \
+                util-linux \
+                coreutils
         fi
         ;;
 
     # ── openSUSE / SLES ────────────────────────────────────────────────────────
     opensuse*|sles|suse)
         info "Using zypper (openSUSE/SLES)"
-        _sudo zypper --non-interactive install curl gcc
+        _sudo zypper --non-interactive install \
+            curl gcc \
+            parted \
+            e2fsprogs \
+            xfsprogs \
+            btrfsprogs \
+            ntfs-3g \
+            cryptsetup \
+            smartmontools \
+            lvm2 \
+            qemu-tools \
+            gptfdisk \
+            util-linux \
+            coreutils
         ;;
 
     # ── Arch / Manjaro / EndeavourOS ──────────────────────────────────────────
     arch|manjaro|endeavouros|garuda|artix|blackarch|parabola|crystal)
         info "Using pacman (Arch family)"
-        _sudo pacman -Sy --noconfirm --needed curl gcc base-devel
+        _sudo pacman -Sy --noconfirm --needed \
+            curl gcc base-devel \
+            parted \
+            e2fsprogs \
+            xfsprogs \
+            btrfs-progs \
+            ntfs-3g \
+            cryptsetup \
+            smartmontools \
+            lvm2 \
+            qemu-base \
+            gptfdisk \
+            util-linux \
+            coreutils
         ;;
 
     # ── Alpine ────────────────────────────────────────────────────────────────
     alpine)
         info "Using apk (Alpine)"
-        _sudo apk add --no-cache curl gcc musl-dev
+        _sudo apk add --no-cache \
+            curl gcc musl-dev \
+            parted \
+            e2fsprogs e2fsprogs-extra \
+            xfsprogs \
+            btrfs-progs \
+            ntfs-3g ntfs-3g-progs \
+            cryptsetup \
+            smartmontools \
+            lvm2 \
+            qemu-img \
+            sgdisk \
+            util-linux \
+            coreutils
         ;;
 
     # ── Void Linux ────────────────────────────────────────────────────────────
     void)
         info "Using xbps-install (Void)"
-        _sudo xbps-install -Sy curl gcc
+        _sudo xbps-install -Sy \
+            curl gcc \
+            parted \
+            e2fsprogs \
+            xfsprogs \
+            btrfs-progs \
+            ntfs-3g \
+            cryptsetup \
+            smartmontools \
+            lvm2 \
+            qemu \
+            gptfdisk \
+            util-linux \
+            coreutils
         ;;
 
     # ── Gentoo ────────────────────────────────────────────────────────────────
     gentoo)
         info "Using emerge (Gentoo)"
-        _sudo emerge --ask=n net-misc/curl sys-devel/gcc
+        _sudo emerge --ask=n \
+            net-misc/curl sys-devel/gcc \
+            sys-block/parted \
+            sys-fs/e2fsprogs \
+            sys-fs/xfsprogs \
+            sys-fs/btrfs-progs \
+            sys-fs/ntfs3g \
+            sys-fs/cryptsetup \
+            sys-apps/smartmontools \
+            sys-fs/lvm2 \
+            app-emulation/qemu \
+            sys-apps/gptfdisk \
+            sys-apps/util-linux \
+            sys-apps/coreutils
         ;;
 
     # ── NixOS ─────────────────────────────────────────────────────────────────
     nixos)
-        warn "NixOS detected — please ensure curl and gcc are in your environment."
-        warn "Consider using: nix-shell -p curl gcc rustup"
+        warn "NixOS detected — please ensure dependencies are in your environment."
+        warn "Consider using: nix-shell -p curl gcc rustup parted e2fsprogs xfsprogs"
+        warn "  btrfs-progs ntfs3g cryptsetup smartmontools lvm2 qemu gdisk util-linux"
         ;;
 
     # ── Slackware ─────────────────────────────────────────────────────────────
     slackware)
-        warn "Slackware detected — please ensure curl and gcc are installed manually."
+        warn "Slackware detected — please install the following manually:"
+        warn "  curl gcc parted e2fsprogs xfsprogs btrfs-progs ntfs-3g"
+        warn "  cryptsetup smartmontools lvm2 qemu gdisk util-linux"
         ;;
 
     # ── macOS ─────────────────────────────────────────────────────────────────
     macos)
         if command -v brew &>/dev/null; then
             info "Using Homebrew (macOS)"
-            brew install curl
+            brew install curl smartmontools qemu
+            warn "Note: parted, cryptsetup, lvm2, e2fsprogs, xfsprogs, btrfs-progs,"
+            warn "  and ntfs-3g are Linux-only. Some features will not work on macOS."
         else
             warn "Homebrew not found. Install it from https://brew.sh or ensure Xcode CLT is installed."
             xcode-select --install 2>/dev/null || true
@@ -131,23 +244,38 @@ install_system_deps() {
         if echo "$id_like_lower" | grep -qE 'debian|ubuntu'; then
             info "ID_LIKE matches Debian family — using apt-get"
             _sudo apt-get update -qq
-            _sudo apt-get install -y --no-install-recommends curl gcc build-essential
+            _sudo apt-get install -y --no-install-recommends \
+                curl gcc build-essential \
+                parted e2fsprogs xfsprogs btrfs-progs ntfs-3g cryptsetup \
+                smartmontools lvm2 qemu-utils gdisk util-linux coreutils
         elif echo "$id_like_lower" | grep -qE 'rhel|fedora|centos'; then
             info "ID_LIKE matches RHEL family — using dnf/yum"
             if command -v dnf &>/dev/null; then
-                _sudo dnf install -y curl gcc
+                _sudo dnf install -y \
+                    curl gcc parted e2fsprogs xfsprogs btrfs-progs ntfsprogs \
+                    cryptsetup smartmontools lvm2 qemu-img gdisk util-linux coreutils
             else
-                _sudo yum install -y curl gcc
+                _sudo yum install -y \
+                    curl gcc parted e2fsprogs xfsprogs btrfs-progs ntfsprogs \
+                    cryptsetup smartmontools lvm2 qemu-img gdisk util-linux coreutils
             fi
         elif echo "$id_like_lower" | grep -qE 'arch'; then
             info "ID_LIKE matches Arch family — using pacman"
-            _sudo pacman -Sy --noconfirm --needed curl gcc base-devel
+            _sudo pacman -Sy --noconfirm --needed \
+                curl gcc base-devel parted e2fsprogs xfsprogs btrfs-progs ntfs-3g \
+                cryptsetup smartmontools lvm2 qemu-base gptfdisk util-linux coreutils
         elif echo "$id_like_lower" | grep -qE 'suse'; then
             info "ID_LIKE matches openSUSE family — using zypper"
-            _sudo zypper --non-interactive install curl gcc
+            _sudo zypper --non-interactive install \
+                curl gcc parted e2fsprogs xfsprogs btrfsprogs ntfs-3g \
+                cryptsetup smartmontools lvm2 qemu-tools gptfdisk util-linux coreutils
         else
             warn "Unknown distro '$DISTRO_NAME'. Skipping automatic dependency install."
-            warn "Please ensure curl and a C linker (gcc/clang) are installed, then re-run."
+            warn "Please ensure the following are installed, then re-run:"
+            warn "  Build:   curl, gcc (or clang)"
+            warn "  Runtime: parted, e2fsprogs, xfsprogs, btrfs-progs, ntfs-3g,"
+            warn "           cryptsetup, smartmontools, lvm2, qemu-utils, gdisk,"
+            warn "           util-linux, coreutils"
         fi
         ;;
     esac
