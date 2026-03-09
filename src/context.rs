@@ -24,12 +24,50 @@ pub struct Disk {
     pub size: String,
 }
 
+impl std::fmt::Display for Disk {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.path)
+    }
+}
+
+impl std::ops::Deref for Disk {
+    type Target = str;
+    fn deref(&self) -> &str {
+        &self.path
+    }
+}
+
+impl AsRef<std::ffi::OsStr> for Disk {
+    fn as_ref(&self) -> &std::ffi::OsStr {
+        std::ffi::OsStr::new(&self.path)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Partition {
     pub index: u32,
     pub name: String,      // e.g. "sda1"
     pub path: String,      // e.g. "/dev/sda1"
     pub size: String,
+}
+
+impl std::fmt::Display for Partition {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.path)
+    }
+}
+
+impl std::ops::Deref for Partition {
+    type Target = str;
+    fn deref(&self) -> &str {
+        &self.path
+    }
+}
+
+impl AsRef<std::ffi::OsStr> for Partition {
+    fn as_ref(&self) -> &std::ffi::OsStr {
+        std::ffi::OsStr::new(&self.path)
+    }
 }
 
 #[derive(Debug, Default)]

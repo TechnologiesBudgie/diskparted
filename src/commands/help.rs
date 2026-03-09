@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 pub fn run() {
     println!("Copyright 2026 DiskParted Team. Licensed under GNU GPLv3.");
     println!("DiskParted version 1.0.1");
@@ -23,7 +24,7 @@ pub fn run() {
     println!();
 
     // Legend
-    println!("  [+] Implemented    [-] Not on Linux    [~] Partial/stub");
+    println!("  [+] Implemented    [-] Not on Linux    [~] Partial/stub    [!] Linux extension");
     println!();
 
     let commands: &[(&str, &str, &str)] = &[
@@ -34,17 +35,19 @@ pub fn run() {
         ("ATTACH",        "[-]", "Attach a VHD virtual disk (Windows VDS only)"),
         ("ATTRIBUTES",    "[-]", "Disk/volume attribute flags (Windows VDS only)"),
         ("AUTOMOUNT",     "[+]", "Enable/disable automounting (fstab / udev)"),
+        ("BENCHMARK",     "[!]", "Quick sequential read/write speed test on selected disk"),
         ("BREAK",         "[+]", "Break mdadm RAID-1 mirror"),
         ("CLEAN",         "[+]", "Remove all partition information from selected disk"),
         ("COMPACT",       "[-]", "Shrink a VHD file (Windows VDS only)"),
-        ("CONVERT",       "[+]", "Convert disk MBR↔GPT, or upgrade ext2/3/4 in-place"),
+        ("CONVERT",       "[+]", "Convert disk MBR\u{2194}GPT, or upgrade ext2/3/4 in-place"),
         ("CREATE",        "[+]", "Create a partition (primary/efi/msr/extended/logical)"),
         ("DELETE",        "[+]", "Delete a partition or volume"),
         ("DETAIL",        "[+]", "Display properties of selected disk/partition/volume"),
         ("DETACH",        "[-]", "Detach a VHD virtual disk (Windows VDS only)"),
+        ("ENCRYPT",       "[!]", "LUKS2 encrypt/open/close/status on selected partition"),
         ("EXIT",          "[+]", "Exit diskparted"),
         ("EXPAND",        "[-]", "Expand a VHD file (Windows VDS only)"),
-        ("EXTEND",        "[ ]", "Extend a volume (not yet implemented)"),
+        ("EXTEND",        "[+]", "Extend a volume into contiguous free space"),
         ("FILESYSTEMS",   "[+]", "Display current and supported filesystems for selected volume"),
         ("FORMAT",        "[+]", "Format the selected partition"),
         ("GPT",           "[+]", "Assign GPT attribute bits to selected partition"),
@@ -56,17 +59,20 @@ pub fn run() {
         ("OFFLINE",       "[+]", "Take selected disk or volume offline (unmount/spin-down)"),
         ("ONLINE",        "[+]", "Bring selected disk or volume online (spin-up/mount)"),
         ("RECOVER",       "[+]", "Refresh disk state, run fsck, reassemble RAID"),
-        ("REM",           "[+]", "Comment line — no-op (for script compatibility)"),
+        ("REM",           "[+]", "Comment line \u{2014} no-op (for script compatibility)"),
         ("REMOVE",        "[+]", "Remove mount point from selected volume"),
         ("REPAIR",        "[+]", "Repair RAID/LVM/ZFS volume on selected disk"),
         ("RESCAN",        "[+]", "Rescan disks (partprobe)"),
-        ("RETAIN",        "[~]", "Retain partition (Windows LDM only — use 'active' instead)"),
-        ("SAN",           "[~]", "SAN policy (Windows VDS only — use 'automount' instead)"),
+        ("RETAIN",        "[~]", "Retain partition (Windows LDM only \u{2014} use 'active' instead)"),
+        ("SAN",           "[~]", "SAN policy (Windows VDS only \u{2014} use 'automount' instead)"),
         ("SELECT",        "[+]", "Select a disk, partition, or volume"),
         ("SET ID",        "[+]", "Change partition type field (GPT GUID or MBR byte)"),
-        ("SHRINK",        "[ ]", "Shrink a volume (not yet implemented)"),
+        ("SHRINK",        "[+]", "Reduce the size of the selected volume"),
+        ("SMART",         "[!]", "Display S.M.A.R.T. health data for selected disk"),
+        ("SNAPSHOT",      "[!]", "Create, list, delete, or restore LVM / Btrfs snapshots"),
         ("UNIQUEID",      "[+]", "Display or set disk GUID (GPT) or MBR signature"),
         ("VDISK",         "[+]", "Manage virtual disks (qcow2/raw/vdi/vmdk/vhd/hdd)"),
+        ("WIPE",          "[!]", "Securely erase selected disk or partition"),
     ];
 
     for (cmd, status, desc) in commands {
@@ -76,8 +82,8 @@ pub fn run() {
     println!();
     println!("  [-] = Not implementable on Linux (Windows VDS/LDM/Hyper-V concepts).");
     println!("        Running these commands will explain why and suggest alternatives.");
-    println!("  [~] = Partially supported — see command output for details.");
-    println!("  [ ] = Planned but not yet implemented.");
+    println!("  [~] = Partially supported \u{2014} see command output for details.");
+    println!("  [!] = Linux extension \u{2014} not in Windows DiskPart, unique to DiskParted.");
     println!();
     println!("Reference: https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/diskpart");
 }

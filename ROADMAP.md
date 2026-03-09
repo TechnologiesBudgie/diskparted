@@ -1,10 +1,10 @@
 # DiskParted — Implementation Roadmap
 
 Legend:
-- `[+]` Implemented
+- `[+]` Implemented (DiskPart-compatible)
 - `[-]` Not implementable on Linux (Windows VDS/LDM/Hyper-V only)
 - `[~]` Partial stub
-- `[ ]` Planned, not yet implemented
+- `[!]` Linux extension — not in Windows DiskPart, unique to DiskParted
 
 ---
 
@@ -28,7 +28,7 @@ Legend:
 | DETACH       | `[-]`  | Windows VDS only — use `vdisk detach` |
 | EXIT         | `[+]`  | |
 | EXPAND       | `[-]`  | Windows VDS only — use `vdisk expand` |
-| EXTEND       | `[ ]`  | resize2fs / xfs_growfs — not yet implemented |
+| EXTEND       | `[+]`  | parted resizepart + resize2fs / xfs_growfs / btrfs / ntfsresize |
 | FILESYSTEMS  | `[+]`  | lsblk FSTYPE + mkfs availability check |
 | FORMAT       | `[+]`  | mkfs.* for all major filesystems |
 | GPT          | `[+]`  | sgdisk --attributes |
@@ -48,14 +48,14 @@ Legend:
 | SAN          | `[~]`  | Windows VDS stub — suggests `automount` |
 | SELECT       | `[+]`  | disk / partition / volume with cross-selection |
 | SET ID       | `[+]`  | sgdisk --typecode / sfdisk |
-| SHRINK       | `[ ]`  | resize2fs / ntfsresize — not yet implemented |
+| SHRINK       | `[+]`  | e2fsck + resize2fs / ntfsresize / btrfs filesystem resize + parted |
 | UNIQUEID     | `[+]`  | sgdisk -u (GPT) / sfdisk --disk-id (MBR) |
 
 ---
 
-## Linux Extension: VDISK
+## Virtual Disk Manager: VDISK
 
-DiskParted adds `vdisk` as a Linux-native replacement for the Windows VHD commands:
+DiskParted adds `vdisk` as a Linux-native replacement for Windows VHD commands:
 
 | Subcommand     | Status | Notes |
 |----------------|--------|-------|
@@ -71,22 +71,25 @@ Supported formats: `qcow2`, `raw`, `vdi`, `vmdk`, `vhd`, `hdd`
 
 ---
 
+## Linux Extensions  [!]
+
+Commands with no Windows DiskPart equivalent, added by DiskParted:
+
+| Command        | Status | Notes |
+|----------------|--------|-------|
+| BENCHMARK      | `[!]`  | dd sequential read/write throughput test |
+| ENCRYPT        | `[!]`  | cryptsetup LUKS2 setup / open / close / status |
+| SMART          | `[!]`  | smartctl health summary and self-test |
+| SNAPSHOT       | `[!]`  | LVM lvcreate snapshot / Btrfs subvolume snapshot |
+| WIPE           | `[!]`  | dd zeros / shred random / blkdiscard (TRIM) |
+
+---
+
 ## Remaining Work
 
-### High priority
-- **EXTEND** — grow a partition/volume after `create` or disk expansion
-  - ext2/3/4: `resize2fs`
-  - xfs: `xfs_growfs`
-  - ntfs: `ntfsresize`
-  - btrfs: `btrfs filesystem resize`
-- **SHRINK** — shrink a partition/volume before `delete` or disk replacement
-  - ext2/3/4: `resize2fs`
-  - ntfs: `ntfsresize`
-  - btrfs: `btrfs filesystem resize`
-  - Note: must unmount first for most filesystems; XFS cannot shrink
-
-### Lower priority
-- Script/batch mode (`diskparted < script.txt`)
-- Operation logging
-- `--noerr` flag support (continue on errors, DiskPart scripting feature)
-- Color output / TUI mode
+### Planned features
+- Script/batch mode (`diskparted < script.txt` or `diskparted -c "command"`)
+- `--noerr` global flag (continue on errors, DiskPart scripting feature)
+- Color output (green `[+]`, red errors, yellow warnings)
+- Tab completion improvements (argument-level completion)
+- Operation log file (`--log=<path>`)
