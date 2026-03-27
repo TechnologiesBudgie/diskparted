@@ -112,11 +112,13 @@ fn convert_to_mbr(ctx: &Context, noerr: bool) {
         return;
     }
 
-    // sgdisk -m converts GPT to MBR (hybrid/destructive)
+    // parted mklabel msdos is the correct, clean GPT→MBR conversion.
+    // sgdisk -m (--mbrclone) creates a *hybrid* MBR and requires explicit
+    // partition numbers; without them it produces a broken/unrecognised table.
     let status = Command::new("sudo")
-        .args(["sgdisk", "-m", &disk.path])
+        .args(["parted", "-s", &disk.path, "mklabel", "msdos"])
         .status()
-        .expect("Failed to execute sgdisk");
+        .expect("Failed to execute parted");
 
     if status.success() {
         println!("Disk {} converted to MBR successfully.", disk.path);

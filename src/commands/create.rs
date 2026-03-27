@@ -121,8 +121,14 @@ fn parted_bounds(size_mb: Option<u64>, offset_kb: Option<u64>) -> (String, Strin
 }
 
 /// Ensure a partition table exists, creating GPT if absent.
+///
+/// NOTE: All parted calls use `LC_ALL=C` so diagnostic output is always in
+/// English, regardless of the system locale (e.g. French "étiquette de
+/// disque inconnue" vs English "unrecognised disk label").
 fn ensure_partition_table(disk_path: &str) -> bool {
     let check = Command::new("parted")
+        .env("LC_ALL", "C")
+        .env("LANG", "C")
         .args(["-s", disk_path, "print"])
         .output();
 
@@ -130,6 +136,7 @@ fn ensure_partition_table(disk_path: &str) -> bool {
         Ok(o) => {
             let out = String::from_utf8_lossy(&o.stdout);
             let err = String::from_utf8_lossy(&o.stderr);
+            // With LC_ALL=C parted always outputs the English string.
             !out.contains("unrecognised disk label") && !err.contains("unrecognised disk label")
         }
         Err(_) => false,
@@ -138,6 +145,8 @@ fn ensure_partition_table(disk_path: &str) -> bool {
     if !has_table {
         println!("No partition table found. Creating GPT label...");
         let status = Command::new("parted")
+            .env("LC_ALL", "C")
+            .env("LANG", "C")
             .args(["-s", disk_path, "mklabel", "gpt"])
             .status()
             .expect("Failed to execute parted");
@@ -154,6 +163,7 @@ fn ensure_partition_table(disk_path: &str) -> bool {
 
 fn run_parted(args: &[&str]) -> bool {
     Command::new("parted")
+        .env("LC_ALL", "C").env("LANG", "C")
         .args(args)
         .status()
         .expect("Failed to execute parted")
@@ -163,6 +173,7 @@ fn run_parted(args: &[&str]) -> bool {
 /// Returns the highest partition number on the disk by parsing parted output.
 fn get_last_partition_number(disk_path: &str) -> Option<String> {
     let output = Command::new("parted")
+        .env("LC_ALL", "C").env("LANG", "C")
         .args(["-s", disk_path, "print"])
         .output()
         .ok()?;
@@ -179,6 +190,7 @@ fn get_last_partition_number(disk_path: &str) -> Option<String> {
 /// Returns "gpt" or "msdos" by parsing parted output.
 fn get_disk_label(disk_path: &str) -> Option<String> {
     let output = Command::new("parted")
+        .env("LC_ALL", "C").env("LANG", "C")
         .args(["-s", disk_path, "print"])
         .output()
         .ok()?;
