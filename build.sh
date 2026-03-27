@@ -42,6 +42,7 @@ detect_distro() {
 #                xfsprogs btrfs-progs ntfs-3g(ntfsresize) cryptsetup
 #                smartmontools(smartctl) lvm2 qemu-utils(qemu-img/qemu-nbd)
 #                sgdisk(gdisk) util-linux(lsblk/blkdiscard/wipefs) shred(coreutils)
+#                zfsutils-linux / zfs (zpool/zfs commands for ZFS pool support)
 ###############################################################################
 install_system_deps() {
     # Helper: run with sudo if not already root
@@ -77,7 +78,8 @@ install_system_deps() {
             qemu-utils \
             gdisk \
             util-linux \
-            coreutils
+            coreutils \
+            zfsutils-linux
         ;;
 
     # ── Fedora / RHEL / CentOS family ─────────────────────────────────────────
@@ -98,6 +100,28 @@ install_system_deps() {
                 gdisk \
                 util-linux \
                 coreutils
+            # ZFS is not in the standard Fedora/RHEL repos.
+            # Add the OpenZFS repository then install.
+            if ! command -v zpool &>/dev/null; then
+                warn "ZFS: not found in standard repos. Attempting OpenZFS repo install..."
+                local fedora_ver
+                fedora_ver=$(rpm -E '%{fedora}' 2>/dev/null || echo "")
+                if [ -n "$fedora_ver" ]; then
+                    _sudo dnf install -y \
+                        "https://zfsonlinux.org/fedora/zfs-release-2-6$(rpm --eval "%{dist}").noarch.rpm" \
+                        || warn "Could not fetch OpenZFS repo RPM — install manually from https://openzfs.github.io/openzfs-docs/Getting%20Started/Fedora/"
+                    _sudo dnf install -y zfs || warn "ZFS install failed. See https://openzfs.github.io/openzfs-docs/Getting%20Started/Fedora/"
+                else
+                    # RHEL/Rocky/Alma: needs EPEL + OpenZFS
+                    _sudo dnf install -y epel-release || true
+                    _sudo dnf install -y \
+                        "https://zfsonlinux.org/epel/zfs-release-2-3$(rpm --eval "%{dist}").noarch.rpm" \
+                        || warn "Could not fetch OpenZFS repo RPM — install manually from https://openzfs.github.io/openzfs-docs/Getting%20Started/RHEL/"
+                    _sudo dnf install -y zfs || warn "ZFS install failed. See https://openzfs.github.io/openzfs-docs/Getting%20Started/RHEL/"
+                fi
+            else
+                info "ZFS (zpool) already available."
+            fi
         else
             info "Using yum (legacy RHEL/CentOS)"
             _sudo yum install -y \
@@ -114,6 +138,14 @@ install_system_deps() {
                 gdisk \
                 util-linux \
                 coreutils
+            if ! command -v zpool &>/dev/null; then
+                warn "ZFS: attempting OpenZFS repo install (requires EPEL)..."
+                _sudo yum install -y epel-release || true
+                _sudo yum install -y \
+                    "https://zfsonlinux.org/epel/zfs-release-2-3$(rpm --eval "%{dist}").noarch.rpm" \
+                    || warn "Could not add OpenZFS repo. Install manually: https://openzfs.github.io/openzfs-docs/Getting%20Started/RHEL/"
+                _sudo yum install -y zfs || warn "ZFS install failed."
+            fi
         fi
         ;;
 
@@ -134,6 +166,20 @@ install_system_deps() {
             gptfdisk \
             util-linux \
             coreutils
+        # ZFS is available via the OpenZFS community repo on openSUSE.
+        if ! command -v zpool &>/dev/null; then
+            warn "ZFS: not in standard openSUSE repos. Attempting community repo install..."
+            local os_ver
+            os_ver=$(. /etc/os-release && echo "$VERSION_ID")
+            _sudo zypper addrepo \
+                "https://download.opensuse.org/repositories/filesystems/openSUSE_Leap_${os_ver}/filesystems.repo" \
+                2>/dev/null || true
+            _sudo zypper --non-interactive --gpg-auto-import-keys refresh || true
+            _sudo zypper --non-interactive install zfs \
+                || warn "ZFS install failed. See https://openzfs.github.io/openzfs-docs/Getting%20Started/openSUSE/"
+        else
+            info "ZFS (zpool) already available."
+        fi
         ;;
 
     # ── Arch / Manjaro / EndeavourOS ──────────────────────────────────────────
@@ -153,6 +199,17 @@ install_system_deps() {
             gptfdisk \
             util-linux \
             coreutils
+        # ZFS on Arch requires a kernel-matched package from the AUR (zfs-linux,
+        # zfs-linux-lts, etc.).  We attempt zfs-utils which provides the userspace
+        # tools (zpool/zfs) without a kernel module, as a best-effort install.
+        if ! command -v zpool &>/dev/null; then
+            warn "ZFS: Arch ZFS requires an AUR build matched to your kernel."
+            warn "Install one of: zfs-linux, zfs-linux-lts, or zfs-dkms via your AUR helper."
+            warn "e.g.  yay -S zfs-linux   or   paru -S zfs-linux"
+            warn "See: https://openzfs.github.io/openzfs-docs/Getting%20Started/Arch%20Linux/"
+        else
+            info "ZFS (zpool) already available."
+        fi
         ;;
 
     # ── Alpine ────────────────────────────────────────────────────────────────
@@ -171,7 +228,8 @@ install_system_deps() {
             qemu-img \
             sgdisk \
             util-linux \
-            coreutils
+            coreutils \
+            zfs
         ;;
 
     # ── Void Linux ────────────────────────────────────────────────────────────
@@ -190,7 +248,8 @@ install_system_deps() {
             qemu \
             gptfdisk \
             util-linux \
-            coreutils
+            coreutils \
+            zfs
         ;;
 
     # ── Gentoo ────────────────────────────────────────────────────────────────
@@ -209,21 +268,22 @@ install_system_deps() {
             app-emulation/qemu \
             sys-apps/gptfdisk \
             sys-apps/util-linux \
-            sys-apps/coreutils
+            sys-apps/coreutils \
+            sys-fs/zfs
         ;;
 
     # ── NixOS ─────────────────────────────────────────────────────────────────
     nixos)
         warn "NixOS detected — please ensure dependencies are in your environment."
         warn "Consider using: nix-shell -p curl gcc rustup parted e2fsprogs xfsprogs"
-        warn "  btrfs-progs ntfs3g cryptsetup smartmontools lvm2 qemu gdisk util-linux"
+        warn "  btrfs-progs ntfs3g cryptsetup smartmontools lvm2 qemu gdisk util-linux zfs"
         ;;
 
     # ── Slackware ─────────────────────────────────────────────────────────────
     slackware)
         warn "Slackware detected — please install the following manually:"
         warn "  curl gcc parted e2fsprogs xfsprogs btrfs-progs ntfs-3g"
-        warn "  cryptsetup smartmontools lvm2 qemu gdisk util-linux"
+        warn "  cryptsetup smartmontools lvm2 qemu gdisk util-linux zfsutils-linux"
         ;;
 
     # ── macOS ─────────────────────────────────────────────────────────────────
@@ -233,6 +293,14 @@ install_system_deps() {
             brew install curl smartmontools qemu
             warn "Note: parted, cryptsetup, lvm2, e2fsprogs, xfsprogs, btrfs-progs,"
             warn "  and ntfs-3g are Linux-only. Some features will not work on macOS."
+            # OpenZFS for macOS is available via Homebrew Cask.
+            if ! command -v zpool &>/dev/null; then
+                warn "ZFS: attempting OpenZFS for macOS install via Homebrew Cask..."
+                brew install --cask openzfs \
+                    || warn "OpenZFS cask failed. Download from https://openzfsonosx.org/"
+            else
+                info "ZFS (zpool) already available."
+            fi
         else
             warn "Homebrew not found. Install it from https://brew.sh or ensure Xcode CLT is installed."
             xcode-select --install 2>/dev/null || true
@@ -247,7 +315,8 @@ install_system_deps() {
             _sudo apt-get install -y --no-install-recommends \
                 curl gcc build-essential \
                 parted e2fsprogs xfsprogs btrfs-progs ntfs-3g cryptsetup \
-                smartmontools lvm2 qemu-utils gdisk util-linux coreutils
+                smartmontools lvm2 qemu-utils gdisk util-linux coreutils \
+                zfsutils-linux
         elif echo "$id_like_lower" | grep -qE 'rhel|fedora|centos'; then
             info "ID_LIKE matches RHEL family — using dnf/yum"
             if command -v dnf &>/dev/null; then
@@ -259,23 +328,34 @@ install_system_deps() {
                     curl gcc parted e2fsprogs xfsprogs btrfs-progs ntfsprogs \
                     cryptsetup smartmontools lvm2 qemu-img gdisk util-linux coreutils
             fi
+            if ! command -v zpool &>/dev/null; then
+                warn "ZFS: not in standard repos. Install manually from https://openzfs.github.io/openzfs-docs/Getting%20Started/RHEL/"
+            fi
         elif echo "$id_like_lower" | grep -qE 'arch'; then
             info "ID_LIKE matches Arch family — using pacman"
             _sudo pacman -Sy --noconfirm --needed \
                 curl gcc base-devel parted e2fsprogs xfsprogs btrfs-progs ntfs-3g \
                 cryptsetup smartmontools lvm2 qemu-base gptfdisk util-linux coreutils
+            if ! command -v zpool &>/dev/null; then
+                warn "ZFS on Arch requires an AUR package (zfs-linux / zfs-dkms) matching your kernel."
+                warn "See: https://openzfs.github.io/openzfs-docs/Getting%20Started/Arch%20Linux/"
+            fi
         elif echo "$id_like_lower" | grep -qE 'suse'; then
             info "ID_LIKE matches openSUSE family — using zypper"
             _sudo zypper --non-interactive install \
                 curl gcc parted e2fsprogs xfsprogs btrfsprogs ntfs-3g \
                 cryptsetup smartmontools lvm2 qemu-tools gptfdisk util-linux coreutils
+            if ! command -v zpool &>/dev/null; then
+                warn "ZFS: add the OpenZFS community repo then run: zypper install zfs"
+                warn "See: https://openzfs.github.io/openzfs-docs/Getting%20Started/openSUSE/"
+            fi
         else
             warn "Unknown distro '$DISTRO_NAME'. Skipping automatic dependency install."
             warn "Please ensure the following are installed, then re-run:"
             warn "  Build:   curl, gcc (or clang)"
             warn "  Runtime: parted, e2fsprogs, xfsprogs, btrfs-progs, ntfs-3g,"
             warn "           cryptsetup, smartmontools, lvm2, qemu-utils, gdisk,"
-            warn "           util-linux, coreutils"
+            warn "           util-linux, coreutils, zfsutils-linux (or distro equivalent)"
         fi
         ;;
     esac
