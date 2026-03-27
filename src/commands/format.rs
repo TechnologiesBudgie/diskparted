@@ -25,7 +25,7 @@ const SUPPORTED_FS: &[&str] = &[
     "fat", "fat16", "fat32", "vfat", "hfs+", "apfs", "ntfs",
     "ext1", "ext2", "ext3", "ext4", "xfs", "btrfs",
     "exfat", "bcachefs", "hfs", "f2fs", "jfs", "linux-swap",
-    "minix", "nilfs2", "reiser4", "reiserfs", "udf"
+    "minix", "nilfs2", "reiser4", "reiserfs", "udf", "zfs"
 ];
 
 pub fn run(args: &[&str], ctx: &mut Context) {
@@ -45,19 +45,22 @@ pub fn run(args: &[&str], ctx: &mut Context) {
 
     let mut fs_type: Option<String> = None;
     let mut quick = false;
+    let mut pool_name: Option<String> = None;
 
     for arg in args {
         if arg.starts_with("fs=") {
             fs_type = Some(arg.trim_start_matches("fs=").to_lowercase());
         } else if *arg == "quick" {
             quick = true;
+        } else if arg.starts_with("name=") {
+            pool_name = Some(arg.trim_start_matches("name=").to_string());
         }
     }
 
     let fs_type = match fs_type {
         Some(f) => f,
         None => {
-            println!("Error: Filesystem not specified. Usage: format fs=<filesystem> [quick]");
+            println!("Error: Filesystem not specified. Usage: format fs=<filesystem> [quick] [name=<pool>]");
             return;
         }
     };
@@ -77,6 +80,11 @@ pub fn run(args: &[&str], ctx: &mut Context) {
 
     // Attempt to unmount silently
     let _ = Command::new("umount").arg(&partition.path).output();
+
+    // ── ZFS is handled separately: it uses `zpool create`, not mkfs ─────────
+    if fs_type == "zfs" {
+        return format_zfs(&partition.path, pool_name.as_deref(), quick);
+    }
 
     let mkfs_cmd = match fs_type.as_str() {
         "fat" | "fat16" => "mkfs.fat",
@@ -125,5 +133,64 @@ pub fn run(args: &[&str], ctx: &mut Context) {
         Ok(s) if s.success() => println!("Partition {} formatted successfully.", partition.path),
         Ok(s) => println!("Failed to format {}. Exit code: {}", partition.path, s),
         Err(e) => println!("Failed to execute mkfs: {}", e),
+    }
+}
+
+/// Create a ZFS pool on a single partition using `zpool create`.
+///
+/// ZFS does not use a traditional mkfs; instead a named pool is created that
+/// owns the device.  The pool name defaults to the basename of the device
+/// (e.g. "/dev/sdb1" → "sdb1") when not supplied with `name=<pool>`.
+///
+/// `quick` maps to `-f` (force) which suppresses the "in use" prompt that
+/// `zpool` emits when the device previously held another filesystem.
+fn format_zfs(dev_path: &str, pool_name: Option<&str>, force: bool) {
+    if which::which("zpool").is_err() {
+        println!("Error: 'zpool' not found. Install the 'zfsutils-linux' (Debian/Ubuntu) \
+                  or 'zfs' (Fedora/Arch) package.");
+        return;
+    }
+
+    // Derive a safe default pool name from the device basename.
+    let default_name: String;
+    let name = match pool_name {
+        Some(n) if !n.is_empty() => n,
+        _ => {
+            default_name = Path::new(dev_path)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("pool0")
+                .to_string();
+            // Strip partition numbers to produce a cleaner name (sda1 → sda).
+            let stripped = default_name.trim_end_matches(|c: char| c.is_ascii_digit());
+            // But keep at least one character.
+            if stripped.is_empty() { &default_name } else { stripped }
+        }
+    };
+
+    // Validate pool name: ZFS pool names must start with a letter and contain
+    // only alphanumerics, hyphens, underscores, colons, or spaces.
+    if !name.chars().next().map(|c| c.is_ascii_alphabetic()).unwrap_or(false) {
+        println!("Error: ZFS pool name '{}' must start with a letter.", name);
+        return;
+    }
+
+    let mut cmd = Command::new("zpool");
+    cmd.arg("create");
+    if force {
+        cmd.arg("-f");
+    }
+    cmd.arg(name).arg(dev_path);
+
+    println!("Creating ZFS pool '{}' on {}...", name, dev_path);
+
+    match cmd.status() {
+        Ok(s) if s.success() => {
+            println!("ZFS pool '{}' created successfully on {}.", name, dev_path);
+            println!("The pool is mounted at '/{}'.", name);
+            println!("Use 'zpool status {}' to inspect it.", name);
+        }
+        Ok(s) => println!("zpool create failed for {}. Exit code: {}", dev_path, s),
+        Err(e) => println!("Failed to execute zpool: {}", e),
     }
 }

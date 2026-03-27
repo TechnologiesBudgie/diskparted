@@ -38,6 +38,7 @@ pub const SUPPORTED_FS: &[(&str, &str)] = &[
     ("nilfs2",     "NILFS2 (log-structured)"),
     ("reiserfs",   "ReiserFS"),
     ("bcachefs",   "Bcachefs (modern Linux)"),
+    ("zfs",        "ZFS (pooled storage, checksums, snapshots)"),
 ];
 
 /// Run the FILESYSTEMS command.
@@ -98,7 +99,14 @@ fn detect_fs(path: &str) -> Option<String> {
         .ok()?;
 
     let fs = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    if fs.is_empty() { None } else { Some(fs) }
+    if fs.is_empty() {
+        None
+    } else if fs.eq_ignore_ascii_case("zfs_member") {
+        // lsblk reports ZFS vdevs as "zfs_member"; normalise to "zfs" for consistency.
+        Some("zfs".to_string())
+    } else {
+        Some(fs)
+    }
 }
 
 /// Check if the mkfs tool for a given filesystem is available on the system.
@@ -121,6 +129,8 @@ fn mkfs_available(fs: &str) -> bool {
         "nilfs2"                    => "mkfs.nilfs2",
         "reiserfs"                  => "mkfs.reiserfs",
         "bcachefs"                  => "mkfs.bcachefs",
+        // ZFS uses `zpool` rather than an mkfs tool.
+        "zfs"                       => "zpool",
         _                           => return false,
     };
     which::which(cmd).is_ok()
