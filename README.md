@@ -142,3 +142,5 @@ DiskParted is under active development. Contributions are welcome, especially fo
 - Improving safety checks and error handling
 - Adding support for new filesystems
 - Testing in various environments
+- Replacing system dependencies with native code (Rust prefered)
+
